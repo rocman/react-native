@@ -53,7 +53,6 @@ var NavigatorTransitionerIOS = React.createClass({
 type Route = {
   component: Function;
   title: string;
-  titleIcon?: Object,
   passProps?: Object;
   backButtonTitle?: string;
   backButtonIcon?: Object;
@@ -188,13 +187,6 @@ var NavigatorIOS = React.createClass({
        * The title displayed in the nav bar and back button for this route
        */
       title: PropTypes.string.isRequired,
-
-      /**
-       * If set, the title image will appear with this source. Note
-       * that this doesn't apply for the header of the current view, but the
-       * ones of the views that are pushed afterward.
-       */
-      titleIcon: Image.propTypes.source,
 
       /**
        * Specify additional props passed to the component. NavigatorIOS will
@@ -556,6 +548,7 @@ var NavigatorIOS = React.createClass({
    */
   update: function(route: Route) {
     var routeStack = this.state.routeStack;
+    route.component || route.passProps || (route.skipUpdate = true);
     this.replace(Object.assign(routeStack[routeStack.length - 1], route));
   },
 
@@ -610,14 +603,15 @@ var NavigatorIOS = React.createClass({
 
   _routeToStackItem: function(route: Route, i: number) {
     var Component = route.component;
-    var shouldUpdateChild = this.state.updatingAllIndicesAtOrBeyond !== null &&
-      this.state.updatingAllIndicesAtOrBeyond >= i;
+    var shouldUpdateChild = (
+      this.state.updatingAllIndicesAtOrBeyond !== null &&
+      this.state.updatingAllIndicesAtOrBeyond >= i
+    );
 
     return (
       <StaticContainer key={'nav' + i} shouldUpdate={shouldUpdateChild}>
         <RCTNavigatorItem
           title={route.title}
-          titleIcon={resolveAssetSource(route.titleIcon)}
           style={[
             styles.stackItem,
             this.props.itemWrapperStyle,
@@ -637,11 +631,13 @@ var NavigatorIOS = React.createClass({
           barTintColor={this.props.barTintColor}
           translucent={this.props.translucent !== false}
           titleTextColor={this.props.titleTextColor}>
-          <Component
-            navigator={this.navigator}
-            route={route}
-            {...route.passProps}
-          />
+          <StaticContainer shouldUpdate={!route.skipUpdate}>
+            <Component
+              navigator={this.navigator}
+              route={route}
+              {...route.passProps}
+            />
+          </StaticContainer>
         </RCTNavigatorItem>
       </StaticContainer>
     );
