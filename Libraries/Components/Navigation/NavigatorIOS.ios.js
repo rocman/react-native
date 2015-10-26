@@ -53,6 +53,7 @@ var NavigatorTransitionerIOS = React.createClass({
 type Route = {
   component: Function;
   title: string;
+  titleView?: Function;
   passProps?: Object;
   backButtonTitle?: string;
   backButtonIcon?: Object;
@@ -187,6 +188,11 @@ var NavigatorIOS = React.createClass({
        * The title displayed in the nav bar and back button for this route
        */
       title: PropTypes.string.isRequired,
+      
+      /**
+       * The title view displayed in the nav bar for this route
+       */
+      titleView: PropTypes.element,
 
       /**
        * Specify additional props passed to the component. NavigatorIOS will
@@ -290,6 +296,7 @@ var NavigatorIOS = React.createClass({
     // Precompute a pack of callbacks that's frequently generated and passed to
     // instances.
     this.navigator = {
+      top: this.top,
       push: this.push,
       pop: this.pop,
       popN: this.popN,
@@ -310,6 +317,7 @@ var NavigatorIOS = React.createClass({
   },
 
   componentWillUnmount: function() {
+    // NavigationBarTitleView.unhook(this);
     this.navigationContext.dispose();
     this.navigationContext = new NavigationContext();
   },
@@ -445,6 +453,10 @@ var NavigatorIOS = React.createClass({
   _emitWillFocus: function(route: Route) {
     this.navigationContext.emit('willfocus', {route: route});
   },
+  
+  top: function() {
+    return this.state.routeStack[this.state.routeStack.length - 1];
+  },
 
   push: function(route: Route) {
     invariant(!!route, 'Must supply route to push');
@@ -547,9 +559,8 @@ var NavigatorIOS = React.createClass({
    * Update the current route in the navigation stack.
    */
   update: function(route: Route) {
-    var routeStack = this.state.routeStack;
     route.component || route.passProps || (route.skipUpdate = true);
-    this.replace(Object.assign(routeStack[routeStack.length - 1], route));
+    this.replace(Object.assign(this.top(), route));
   },
 
   popToTop: function() {
@@ -600,6 +611,10 @@ var NavigatorIOS = React.createClass({
     }
     this._handleNavigatorStackChanged(e);
   },
+  
+  _wrapWithUIView: function(component) {
+    
+  },
 
   _routeToStackItem: function(route: Route, i: number) {
     var Component = route.component;
@@ -612,6 +627,7 @@ var NavigatorIOS = React.createClass({
       <StaticContainer key={'nav' + i} shouldUpdate={shouldUpdateChild}>
         <RCTNavigatorItem
           title={route.title}
+          titleView={NavigationBarTitleView.hook(route.titleView, this)}
           style={[
             styles.stackItem,
             this.props.itemWrapperStyle,
@@ -672,6 +688,7 @@ var NavigatorIOS = React.createClass({
       </View>
     );
   },
+  
 });
 
 var styles = StyleSheet.create({
@@ -693,3 +710,54 @@ var RCTNavigator = requireNativeComponent('RCTNavigator');
 var RCTNavigatorItem = requireNativeComponent('RCTNavItem');
 
 module.exports = NavigatorIOS;
+
+var AppRegistry = require('AppRegistry');
+var ReactNativeTagHandles = require('ReactNativeTagHandles');
+var Text = require('Text');
+var components = [];
+var navigationBarTitleViews = {};
+var NavigationBarTitleView = React.createClass({
+  statics: {
+    hook: function(renderer, holder) {
+      if (renderer == null) {
+        return null;
+      }
+      var index = components.findIndex(c => c == holder);
+      if (holder.renderer == renderer) {
+        return index;
+      }
+      delete components[index];
+      index = components.length;
+      components[index] = holder;
+      holder.renderer = renderer;
+      return index;
+    },
+    unhook: function(holder) {
+      delete components[components.findIndex(c => c == holder)];
+    },
+    take: function(index) {
+      var holder = components[index];
+      return holder && holder.renderer;
+    }
+  },
+  render: function() {
+    var index = this.state && this.state.component;
+    if (index == null) {
+      index = this.props.component;
+    }
+    navigationBarTitleViews[this.props.id] = this;
+    var Component = NavigationBarTitleView.take(index);
+    return Component ? Component() : <Text>nothing</Text>;
+  }
+});
+var NativeAppEventEmitter = require('RCTNativeAppEventEmitter');
+NativeAppEventEmitter.addListener('NavigationBarTitleView#update', function(args) {
+  console.log(`args: ${require('util').inspect(args)}`);
+  var navigationBarTitleView = navigationBarTitleViews[args.id];
+  if (navigationBarTitleView) {
+    navigationBarTitleView.setState({
+      component: args.component
+    });
+  }
+});
+AppRegistry.registerComponent('NavigationBarTitleView', () => NavigationBarTitleView);

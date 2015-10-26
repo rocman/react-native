@@ -10,13 +10,19 @@
 #import <UIKit/UIKit.h>
 
 #import "RCTComponent.h"
+#import "RCTNavItemManager.h"
+#import "UIView+React.h"
 
 @interface RCTNavItem : UIView
 
+- (instancetype)initWithBridge:(RCTBridge *)bridge NS_DESIGNATED_INITIALIZER;
+
+@property (nonatomic, assign) RCTNavItemManager *manager;
 @property (nonatomic, assign) UINavigationBar *navigationBar;
 @property (nonatomic, assign) UINavigationItem *navigationItem;
 
 @property (nonatomic, copy) NSString *title;
+@property (nonatomic, copy) NSNumber *titleView;
 @property (nonatomic, strong) UIImage *leftButtonIcon;
 @property (nonatomic, copy) NSString *leftButtonTitle;
 @property (nonatomic, strong) UIImage *rightButtonIcon;

@@ -8,8 +8,34 @@
  */
 
 #import "RCTNavItem.h"
+#import "RCTBridge.h"
+#import "RCTRootView.h"
 
 @implementation RCTNavItem
+{
+  NSNumber *_rootId;
+  __weak RCTBridge *_bridge;
+}
+
+- (instancetype)initWithBridge:(RCTBridge *)bridge
+{
+  RCTAssertParam(bridge);
+  
+  if ((self = [super initWithFrame:CGRectZero])) {
+    _bridge = bridge;
+  }
+  
+  return self;
+}
+
+- (NSNumber *)rootId
+{
+  static NSInteger rootId_max = 0;
+  if (_rootId) {
+    return _rootId;
+  }
+  return _rootId = [[NSNumber alloc] initWithInteger:rootId_max++];
+}
 
 - (void)setOnNavLeftButtonTap:(RCTBubblingEventBlock)onNavLeftButtonTap
 {
@@ -31,17 +57,63 @@
 
 - (void)setNavigationItem:(UINavigationItem *)navigationItem
 {
+  if (_navigationItem == navigationItem) {
+    return;
+  }
   _navigationItem = navigationItem;
-  _navigationItem.title = self.title;
   _navigationItem.backBarButtonItem = self.backButtonItem;
   _navigationItem.leftBarButtonItem = self.leftButtonItem;
   _navigationItem.rightBarButtonItem = self.rightButtonItem;
+  _navigationItem.title = self.title;
+  if (self.titleView) {
+    RCTRootView *root = (RCTRootView *)_navigationItem.titleView;
+    if (root) {
+      [root.bridge.eventDispatcher sendAppEventWithName:@"NavigationBarTitleView#update"
+                                                   body:@{@"component": self.titleView, @"id": self.rootId}];
+    }
+    else {
+      root = [[RCTRootView alloc] initWithBridge:[((RCTBatchedBridge *)_bridge) parentBridge]
+                                      moduleName:@"NavigationBarTitleView"
+                               initialProperties:@{@"component": self.titleView, @"id": self.rootId}];
+      root.frame = CGRectMake(0, 0, 800, 44);
+      root.backgroundColor = [[UIColor alloc] initWithWhite:0 alpha:0];
+      _navigationItem.titleView = root;
+    }
+  }
+  else {
+    _navigationItem.titleView = nil;
+  }
 }
 
 - (void)setTitle:(NSString *)title
 {
   _title = title;
   _navigationItem.title = title;
+}
+
+- (void)setTitleView:(NSNumber *)titleView
+{
+  _titleView = titleView;
+  if (_navigationItem) {
+    if (self.titleView) {
+      RCTRootView *root = (RCTRootView *)_navigationItem.titleView;
+      if (root) {
+        [root.bridge.eventDispatcher sendAppEventWithName:@"NavigationBarTitleView#update"
+                                                     body:@{@"component": self.titleView, @"id": self.rootId}];
+      }
+      else {
+        root = [[RCTRootView alloc] initWithBridge:[((RCTBatchedBridge *)_bridge) parentBridge]
+                                        moduleName:@"NavigationBarTitleView"
+                                 initialProperties:@{@"component": self.titleView, @"id": self.rootId}];
+        root.frame = CGRectMake(0, 0, 800, 44);
+        root.backgroundColor = [[UIColor alloc] initWithWhite:0 alpha:0];
+        _navigationItem.titleView = root;
+      }
+    }
+    else {
+      _navigationItem.titleView = nil;
+    }
+  }
 }
 
 - (void)setBackButtonTitle:(NSString *)backButtonTitle
