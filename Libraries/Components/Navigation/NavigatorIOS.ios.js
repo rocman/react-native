@@ -559,8 +559,10 @@ var NavigatorIOS = React.createClass({
    * Update the current route in the navigation stack.
    */
   update: function(route: Route) {
-    route.component || route.passProps || (route.skipUpdate = true);
-    this.replace(Object.assign(this.top(), route));
+    if (route) {
+      route.component || route.passProps || (route.skipUpdate = true);
+      this.replace(Object.assign(this.top(), route));
+    }
   },
 
   popToTop: function() {
@@ -624,7 +626,7 @@ var NavigatorIOS = React.createClass({
     );
 
     return (
-      <StaticContainer key={'nav' + i} shouldUpdate={shouldUpdateChild}>
+      <StaticContainer key={'nav_' + i} shouldUpdate={shouldUpdateChild}>
         <RCTNavigatorItem
           title={route.title}
           titleView={NavigationBarTitleView.hook(route.titleView, this)}
@@ -647,7 +649,7 @@ var NavigatorIOS = React.createClass({
           barTintColor={this.props.barTintColor}
           translucent={this.props.translucent !== false}
           titleTextColor={this.props.titleTextColor}>
-          <StaticContainer shouldUpdate={!route.skipUpdate}>
+          <StaticContainer key={'nav_content_' + i} shouldUpdate={!route.skipUpdate}>
             <Component
               navigator={this.navigator}
               route={route}
@@ -752,7 +754,6 @@ var NavigationBarTitleView = React.createClass({
 });
 var NativeAppEventEmitter = require('RCTNativeAppEventEmitter');
 NativeAppEventEmitter.addListener('NavigationBarTitleView#update', function(args) {
-  console.log(`args: ${require('util').inspect(args)}`);
   var navigationBarTitleView = navigationBarTitleViews[args.id];
   if (navigationBarTitleView) {
     navigationBarTitleView.setState({

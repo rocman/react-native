@@ -17,5 +17,9 @@
 @property (nonatomic, assign, getter=isSelected) BOOL selected;
 @property (nonatomic, readonly) UITabBarItem *barItem;
 @property (nonatomic, copy) RCTBubblingEventBlock onPress;
+@property (nonatomic, copy) RCTBubblingEventBlock onWillAppear;
+@property (nonatomic, copy) RCTBubblingEventBlock onDidAppear;
+@property (nonatomic, copy) RCTBubblingEventBlock onWillDisappear;
+@property (nonatomic, copy) RCTBubblingEventBlock onDidDisappear;
 
 @end

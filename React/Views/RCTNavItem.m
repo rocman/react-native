@@ -21,7 +21,7 @@
 {
   RCTAssertParam(bridge);
   
-  if ((self = [super initWithFrame:CGRectZero])) {
+  if ((self = [super init])) {
     _bridge = bridge;
   }
   

@@ -13,6 +13,7 @@
 
 #import "RCTEventDispatcher.h"
 #import "RCTNavItem.h"
+#import "RCTTabBarItem.h"
 #import "RCTUtils.h"
 #import "RCTViewControllerProtocol.h"
 #import "UIView+React.h"
@@ -45,6 +46,14 @@
 {
   if ((self = [self initWithContentView:navItem])) {
     _navItem = navItem;
+  }
+  return self;
+}
+
+- (instancetype)initWithTabItem:(RCTTabBarItem *)tabItem
+{
+  if ((self = [self initWithContentView:tabItem])) {
+    _tabItem = tabItem;
   }
   return self;
 }
@@ -99,6 +108,53 @@ static BOOL RCTFindScrollViewAndRefreshContentInsetInView(UIView *view)
 
     _navItem.navigationItem = self.navigationItem;
     _navItem.navigationBar = self.navigationController.navigationBar;
+  }
+  
+  // TODO: find a way to make this less-tightly coupled to tab bar controller
+  if ([self.parentViewController isKindOfClass:[UITabBarController class]])
+  {
+    if (_tabItem.onWillAppear) {
+      _tabItem.onWillAppear(nil);
+    }
+  }
+}
+
+- (void)viewDidAppear:(BOOL)animated
+{
+  [super viewDidAppear:animated];
+  
+  // TODO: find a way to make this less-tightly coupled to tab bar controller
+  if ([self.parentViewController isKindOfClass:[UITabBarController class]])
+  {
+    if (_tabItem.onDidAppear) {
+      _tabItem.onDidAppear(nil);
+    }
+  }
+}
+
+- (void)viewWillDisappear:(BOOL)animated
+{
+  [super viewWillDisappear:animated];
+  
+  // TODO: find a way to make this less-tightly coupled to tab bar controller
+  if ([self.parentViewController isKindOfClass:[UITabBarController class]])
+  {
+    if (_tabItem.onWillDisappear) {
+      _tabItem.onWillDisappear(nil);
+    }
+  }
+}
+
+- (void)viewDidDisappear:(BOOL)animated
+{
+  [super viewDidDisappear:animated];
+  
+  // TODO: find a way to make this less-tightly coupled to tab bar controller
+  if ([self.parentViewController isKindOfClass:[UITabBarController class]])
+  {
+    if (_tabItem.onDidDisappear) {
+      _tabItem.onDidDisappear(nil);
+    }
   }
 }
 
