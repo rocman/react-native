@@ -64,6 +64,7 @@ type Route = {
   rightButtonIcon?: Object;
   onRightButtonPress?: Function;
   wrapperStyle?: any;
+  skipUpdate?: boolean;
 };
 
 type State = {
@@ -248,6 +249,11 @@ var NavigatorIOS = React.createClass({
        * Styles for the navigation item containing the component
        */
       wrapperStyle: View.propTypes.style,
+      
+      /**
+       * Whether to update the component on render.
+       */
+      skipUpdate: PropTypes.bool
 
     }).isRequired,
 

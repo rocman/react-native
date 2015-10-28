@@ -17,9 +17,9 @@
 
 - (instancetype)initWithBridge:(RCTBridge *)bridge NS_DESIGNATED_INITIALIZER;
 
-@property (nonatomic, assign) RCTNavItemManager *manager;
-@property (nonatomic, assign) UINavigationBar *navigationBar;
-@property (nonatomic, assign) UINavigationItem *navigationItem;
+@property (nonatomic, strong) RCTNavItemManager *manager;
+@property (nonatomic, strong) UINavigationBar *navigationBar;
+@property (nonatomic, strong) UINavigationItem *navigationItem;
 
 @property (nonatomic, copy) NSString *title;
 @property (nonatomic, copy) NSNumber *titleView;
