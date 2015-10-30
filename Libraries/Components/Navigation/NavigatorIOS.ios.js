@@ -307,12 +307,14 @@ var NavigatorIOS = React.createClass({
       pop: this.pop,
       popN: this.popN,
       replace: this.replace,
+      replaceAtIndex: this.replaceAtIndex,
       replacePrevious: this.replacePrevious,
       replacePreviousAndPop: this.replacePreviousAndPop,
       update: this.update,
       resetTo: this.resetTo,
       popToRoute: this.popToRoute,
       popToTop: this.popToTop,
+      routeStack: this.state.routeStack,
       navigationContext: this.navigationContext,
     };
     this._emitWillFocus(this.state.routeStack[this.state.observedTopOfStack]);
@@ -630,39 +632,41 @@ var NavigatorIOS = React.createClass({
       this.state.updatingAllIndicesAtOrBeyond !== null &&
       this.state.updatingAllIndicesAtOrBeyond >= i
     );
-
+    
     return (
       <StaticContainer key={'nav_' + i} shouldUpdate={shouldUpdateChild}>
-        <RCTNavigatorItem
-          title={route.title}
-          titleView={NavigationBarTitleView.hook(route.titleView, this)}
-          style={[
-            styles.stackItem,
-            this.props.itemWrapperStyle,
-            route.wrapperStyle
-          ]}
-          backButtonIcon={resolveAssetSource(route.backButtonIcon)}
-          backButtonTitle={route.backButtonTitle}
-          leftButtonIcon={resolveAssetSource(route.leftButtonIcon)}
-          leftButtonTitle={route.leftButtonTitle}
-          onNavLeftButtonTap={route.onLeftButtonPress}
-          rightButtonIcon={resolveAssetSource(route.rightButtonIcon)}
-          rightButtonTitle={route.rightButtonTitle}
-          onNavRightButtonTap={route.onRightButtonPress}
-          navigationBarHidden={this.props.navigationBarHidden}
-          shadowHidden={this.props.shadowHidden}
-          tintColor={this.props.tintColor}
-          barTintColor={this.props.barTintColor}
-          translucent={this.props.translucent !== false}
-          titleTextColor={this.props.titleTextColor}>
-          <StaticContainer key={'nav_content_' + i} shouldUpdate={!route.skipUpdate}>
-            <Component
-              navigator={this.navigator}
-              route={route}
-              {...route.passProps}
-            />
-          </StaticContainer>
-        </RCTNavigatorItem>
+        {shouldUpdateChild && (
+          <RCTNavigatorItem
+            title={route.title}
+            titleView={NavigationBarTitleView.hook(route.titleView, route)}
+            style={[
+              styles.stackItem,
+              this.props.itemWrapperStyle,
+              route.wrapperStyle
+            ]}
+            backButtonIcon={resolveAssetSource(route.backButtonIcon)}
+            backButtonTitle={route.backButtonTitle}
+            leftButtonIcon={resolveAssetSource(route.leftButtonIcon)}
+            leftButtonTitle={route.leftButtonTitle}
+            onNavLeftButtonTap={route.onLeftButtonPress}
+            rightButtonIcon={resolveAssetSource(route.rightButtonIcon)}
+            rightButtonTitle={route.rightButtonTitle}
+            onNavRightButtonTap={route.onRightButtonPress}
+            navigationBarHidden={this.props.navigationBarHidden}
+            shadowHidden={this.props.shadowHidden}
+            tintColor={this.props.tintColor}
+            barTintColor={this.props.barTintColor}
+            translucent={this.props.translucent !== false}
+            titleTextColor={this.props.titleTextColor}>
+            <StaticContainer key={'nav_content_' + i} shouldUpdate={!route.skipUpdate}>
+              <Component
+                navigator={this.navigator}
+                route={route}
+                {...route.passProps}
+              />
+            </StaticContainer>
+          </RCTNavigatorItem> 
+        )}
       </StaticContainer>
     );
   },
@@ -731,9 +735,6 @@ var NavigationBarTitleView = React.createClass({
         return null;
       }
       var index = components.findIndex(c => c == holder);
-      if (holder.renderer == renderer) {
-        return index;
-      }
       delete components[index];
       index = components.length;
       components[index] = holder;
