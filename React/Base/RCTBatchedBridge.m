@@ -20,7 +20,6 @@
 #import "RCTModuleMap.h"
 #import "RCTBridgeMethod.h"
 #import "RCTPerformanceLogger.h"
-#import "RCTPerfStats.h"
 #import "RCTProfile.h"
 #import "RCTRedBox.h"
 #import "RCTSourceCode.h"
@@ -57,11 +56,11 @@ RCT_EXTERN NSArray *RCTGetModuleClasses(void);
 {
   BOOL _loading;
   BOOL _valid;
+  BOOL _wasBatchActive;
   __weak id<RCTJavaScriptExecutor> _javaScriptExecutor;
   NSMutableArray *_pendingCalls;
   NSMutableArray *_moduleDataByID;
   RCTModuleMap *_modulesByName;
-  CADisplayLink *_mainDisplayLink;
   CADisplayLink *_jsDisplayLink;
   NSMutableSet *_frameUpdateObservers;
 }
@@ -86,11 +85,6 @@ RCT_EXTERN NSArray *RCTGetModuleClasses(void);
     _moduleDataByID = [NSMutableArray new];
     _frameUpdateObservers = [NSMutableSet new];
     _jsDisplayLink = [CADisplayLink displayLinkWithTarget:self selector:@selector(_jsThreadUpdate:)];
-
-    if (RCT_DEV) {
-      _mainDisplayLink = [CADisplayLink displayLinkWithTarget:self selector:@selector(_mainThreadUpdate:)];
-      [_mainDisplayLink addToRunLoop:[NSRunLoop mainRunLoop] forMode:NSRunLoopCommonModes];
-    }
 
     [RCTBridge setCurrentBridge:self];
 
@@ -190,13 +184,20 @@ RCT_EXTERN NSArray *RCTGetModuleClasses(void);
     // Force JS __DEV__ value to match RCT_DEBUG
     if (shouldOverrideDev) {
       NSString *sourceString = [[NSString alloc] initWithData:source encoding:NSUTF8StringEncoding];
-      NSRange range = [sourceString rangeOfString:@"__DEV__="];
+      NSRange range = [sourceString rangeOfString:@"\\b__DEV__\\s*?=\\s*?(!1|!0|false|true)"
+                                          options:NSRegularExpressionSearch];
+
       RCTAssert(range.location != NSNotFound, @"It looks like the implementation"
                 "of __DEV__ has changed. Update -[RCTBatchedBridge loadSource:].");
-      NSRange valueRange = {range.location + range.length, 2};
-      if ([[sourceString substringWithRange:valueRange] isEqualToString:@"!1"]) {
-        source = [[sourceString stringByReplacingCharactersInRange:valueRange withString:@" 1"] dataUsingEncoding:NSUTF8StringEncoding];
+
+      NSString *valueString = [sourceString substringWithRange:range];
+      if ([valueString rangeOfString:@"!1"].length) {
+        valueString = [valueString stringByReplacingOccurrencesOfString:@"!1" withString:@"!0"];
+      } else if ([valueString rangeOfString:@"false"].length) {
+        valueString = [valueString stringByReplacingOccurrencesOfString:@"false" withString:@"true"];
       }
+      source = [[sourceString stringByReplacingCharactersInRange:range withString:valueString]
+                dataUsingEncoding:NSUTF8StringEncoding];
     }
 
     _onSourceLoad(error, source);
@@ -301,9 +302,9 @@ RCT_EXTERN NSArray *RCTGetModuleClasses(void);
 
 - (NSString *)moduleConfig
 {
-  NSMutableDictionary *config = [NSMutableDictionary new];
+  NSMutableArray *config = [NSMutableArray new];
   for (RCTModuleData *moduleData in _moduleDataByID) {
-    config[moduleData.name] = moduleData.config;
+    [config addObject:moduleData.config];
     if ([moduleData.instance conformsToProtocol:@protocol(RCTFrameUpdateObserver)]) {
       [_frameUpdateObservers addObject:moduleData];
 
@@ -380,6 +381,7 @@ RCT_EXTERN NSArray *RCTGetModuleClasses(void);
     // timing issues with RCTRootView
     dispatch_async(dispatch_get_main_queue(), ^{
       [self didFinishLoading];
+
       [[NSNotificationCenter defaultCenter] postNotificationName:RCTJavaScriptDidLoadNotification
                                                           object:_parentBridge
                                                         userInfo:@{ @"bridge": self }];
@@ -415,6 +417,7 @@ RCT_EXTERN NSArray *RCTGetModuleClasses(void);
   } else {
     [self.redBox showError:error];
   }
+  RCTLogError(@"Error while loading: %@", error.localizedDescription);
 
   NSDictionary *userInfo = @{@"bridge": self, @"error": error};
   [[NSNotificationCenter defaultCenter] postNotificationName:RCTJavaScriptDidFailToLoadNotification
@@ -498,9 +501,6 @@ RCT_NOT_IMPLEMENTED(- (instancetype)initWithBundleURL:(__unused NSURL *)bundleUR
   if ([RCTBridge currentBridge] == self) {
     [RCTBridge setCurrentBridge:nil];
   }
-
-  [_mainDisplayLink invalidate];
-  _mainDisplayLink = nil;
 
   // Invalidate modules
   dispatch_group_t group = dispatch_group_create();
@@ -607,7 +607,7 @@ RCT_NOT_IMPLEMENTED(- (instancetype)initWithBundleURL:(__unused NSURL *)bundleUR
          @"error": RCTNullIfNil(error),
        });
 
-       [self _handleBuffer:json];
+       [self handleBuffer:json batchEnded:YES];
 
        onComplete(error);
      }];
@@ -663,7 +663,7 @@ RCT_NOT_IMPLEMENTED(- (instancetype)initWithBundleURL:(__unused NSURL *)bundleUR
       return;
     }
     [[NSNotificationCenter defaultCenter] postNotificationName:RCTDequeueNotification object:nil userInfo:nil];
-    [self _handleBuffer:json];
+    [self handleBuffer:json batchEnded:YES];
   };
 
   [_javaScriptExecutor executeJSCall:module
@@ -674,14 +674,26 @@ RCT_NOT_IMPLEMENTED(- (instancetype)initWithBundleURL:(__unused NSURL *)bundleUR
 
 #pragma mark - Payload Processing
 
-- (void)_handleBuffer:(id)buffer
+- (void)handleBuffer:(id)buffer batchEnded:(BOOL)batchEnded
 {
   RCTAssertJSThread();
 
-  if (buffer == nil || buffer == (id)kCFNull) {
-    return;
+  if (buffer != nil && buffer != (id)kCFNull) {
+    _wasBatchActive = YES;
+    [self handleBuffer:buffer];
   }
 
+  if (batchEnded) {
+    if (_wasBatchActive) {
+      [self batchDidComplete];
+    }
+
+    _wasBatchActive = NO;
+  }
+}
+
+- (void)handleBuffer:(id)buffer
+{
   NSArray *requestsArray = [RCTConvert NSArray:buffer];
 
 #if RCT_DEBUG
@@ -759,7 +771,10 @@ RCT_NOT_IMPLEMENTED(- (instancetype)initWithBundleURL:(__unused NSURL *)bundleUR
       dispatch_async(queue, block);
     }
   }
+}
 
+- (void)batchDidComplete
+{
   // TODO: batchDidComplete is only used by RCTUIManager - can we eliminate this special case?
   for (RCTModuleData *moduleData in _moduleDataByID) {
     if ([moduleData.instance respondsToSelector:@selector(batchDidComplete)]) {
@@ -844,21 +859,6 @@ RCT_NOT_IMPLEMENTED(- (instancetype)initWithBundleURL:(__unused NSURL *)bundleUR
   RCTProfileImmediateEvent(0, @"JS Thread Tick", 'g');
 
   RCTProfileEndEvent(0, @"objc_call", nil);
-
-  RCT_IF_DEV(
-    dispatch_async(dispatch_get_main_queue(), ^{
-      [self.perfStats.jsGraph onTick:displayLink.timestamp];
-    });
-  )
-}
-
-- (void)_mainThreadUpdate:(CADisplayLink *)displayLink
-{
-  RCTAssertMainThread();
-
-  RCTProfileImmediateEvent(0, @"VSYNC", 'g');
-
-  _modulesByName == nil ?: [self.perfStats.uiGraph onTick:displayLink.timestamp];
 }
 
 - (void)startProfiling

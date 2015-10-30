@@ -346,6 +346,7 @@ var Navigator = React.createClass({
       this._navigationContext.dispose();
       this._navigationContext = null;
     }
+    this.spring.removeAllListeners();
   },
 
   /**
@@ -591,8 +592,11 @@ var Navigator = React.createClass({
 
   _handleMoveShouldSetPanResponder: function(e, gestureState) {
     var sceneConfig = this.state.sceneConfigStack[this.state.presentedIndex];
+    if (!sceneConfig) {
+      return false;
+    }
     this._expectingGestureGrant = this._matchGestureAction(this._eligibleGestures, sceneConfig.gestures, gestureState);
-    return !! this._expectingGestureGrant;
+    return !!this._expectingGestureGrant;
   },
 
   _doesGestureOverswipe: function(gestureName) {

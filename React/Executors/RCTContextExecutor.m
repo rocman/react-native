@@ -90,6 +90,13 @@ RCT_NOT_IMPLEMENTED(-(instancetype)init)
 
 @end
 
+// Private bridge interface to allow middle-batch calls
+@interface RCTBridge (RCTContextExecutor)
+
+- (void)handleBuffer:(NSArray *)buffer batchEnded:(BOOL)hasEnded;
+
+@end
+
 @implementation RCTContextExecutor
 {
   RCTJavaScriptContext *_context;
@@ -336,6 +343,16 @@ static void RCTInstallJSCProfiler(RCTBridge *bridge, JSContextRef context)
     }
     [strongSelf _addNativeHook:RCTNativeLoggingHook withName:"nativeLoggingHook"];
     [strongSelf _addNativeHook:RCTNoop withName:"noop"];
+
+    __weak RCTBridge *bridge = strongSelf->_bridge;
+    strongSelf->_context.context[@"nativeFlushQueueImmediate"] = ^(NSArray *calls){
+      if (!weakSelf.valid || !calls) {
+        return;
+      }
+
+      [bridge handleBuffer:calls batchEnded:NO];
+    };
+
 #if RCT_DEV
     [strongSelf _addNativeHook:RCTNativeTraceBeginSection withName:"nativeTraceBeginSection"];
     [strongSelf _addNativeHook:RCTNativeTraceEndSection withName:"nativeTraceEndSection"];
@@ -518,13 +535,14 @@ static void RCTInstallJSCProfiler(RCTBridge *bridge, JSContextRef context)
       return;
     }
 
+    RCTPerformanceLoggerStart(RCTPLScriptExecution);
+
     // JSStringCreateWithUTF8CString expects a null terminated C string
     NSMutableData *nullTerminatedScript = [NSMutableData dataWithCapacity:script.length + 1];
 
     [nullTerminatedScript appendData:script];
     [nullTerminatedScript appendBytes:"" length:1];
 
-    RCTPerformanceLoggerStart(RCTPLScriptExecution);
     JSValueRef jsError = NULL;
     JSStringRef execJSString = JSStringCreateWithUTF8CString(nullTerminatedScript.bytes);
     JSStringRef jsURL = JSStringCreateWithCFString((__bridge CFStringRef)sourceURL.absoluteString);
