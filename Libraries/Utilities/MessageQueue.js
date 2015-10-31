@@ -188,7 +188,7 @@ class MessageQueue {
   /**
    * Converts the old, object-based module structure to the new
    * array-based structure. TODO (t8823865) Removed this
-   * functin once Android has been updated.
+   * function once Android has been updated.
    */
   _genModulesConfig(modules /* array or object */) {
     if (Array.isArray(modules)) {
@@ -230,75 +230,52 @@ class MessageQueue {
   }
 
   _genLookupTables(modulesConfig, moduleTable, methodTable) {
-    for (var moduleID = 0, l = modulesConfig.length; moduleID < l; moduleID++) {
-      let module = modulesConfig[moduleID];
+    modulesConfig.forEach((module, moduleID) => {
       if (!module) {
-        continue;
+        return;
       }
-      let moduleName = module[0];
+
+      let moduleName, methods;
+      if (moduleHasConstants(module)) {
+        [moduleName, , methods] = module;
+      } else {
+        [moduleName, methods] = module;
+      }
+
       moduleTable[moduleID] = moduleName;
-      methodTable[moduleID] = {};
-      if (module.length > 1) {
-        let methodsIndex = 1;
-        if (!Array.isArray(module[1])) {
-          methodsIndex = 2;
-        }
-        if (module.length > methodsIndex) {
-          let methods = module[methodsIndex];
-          for (var methodID = 0, ll = methods.length; methodID < ll; methodID++) {
-            methodTable[moduleID][methodID] = methods[methodID];
-          }
-        }
-      }
-    }
+      methodTable[moduleID] = Object.assign({}, methods);
+    });
   }
 
   _genModules(remoteModules) {
-    for (var i = 0, l = remoteModules.length; i < l; i++) {
-      let module = remoteModules[i];
+    remoteModules.forEach((module, moduleID) => {
       if (!module) {
-        continue;
+        return;
       }
-      let moduleName = module[0];
-      let constants = null;
-      let methods = null;
-      let asyncMethods = null;
-      if (module.length > 0) {
-        let methodsIndex = 1;
-        if (!Array.isArray(module[1])) {
-          constants = module[1];
-          methodsIndex = 2;
-        }
-        if (module.length > methodsIndex) {
-          methods = module[methodsIndex];
-          if (module.length > methodsIndex) {
-            asyncMethods = module[methodsIndex];
-          }
-        }
+
+      let moduleName, constants, methods, asyncMethods;
+      if (moduleHasConstants(module)) {
+        [moduleName, constants, methods, asyncMethods] = module;
+      } else {
+        [moduleName, methods, asyncMethods] = module;
       }
-      let moduleConfig = {
-        moduleID: i,
-        constants,
-        methods,
-        asyncMethods,
-      };
+
+      const moduleConfig = {moduleID, constants, methods, asyncMethods};
       this.RemoteModules[moduleName] = this._genModule({}, moduleConfig);
-    }
+    });
   }
 
   _genModule(module, moduleConfig) {
-    let methods = moduleConfig.methods || [];
-    let asyncMethods = moduleConfig.asyncMethods || [];
-    for (var methodID = 0, l = methods.length; methodID < l; methodID++) {
-      let methodName = methods[methodID];
-      let isAsync = (asyncMethods.indexOf(methodID) !== -1);
-      module[methodName] = this._genMethod(
-        moduleConfig.moduleID,
-        methodID,
-        isAsync ? MethodTypes.remoteAsync : MethodTypes.remote
-      );
-    }
-    Object.assign(module, moduleConfig.constants);
+    const {moduleID, constants, methods = [], asyncMethods = []} = moduleConfig;
+
+    methods.forEach((methodName, methodID) => {
+      const methodType =
+        arrayContains(asyncMethods, methodID) ?
+          MethodTypes.remoteAsync : MethodTypes.remote;
+      module[methodName] = this._genMethod(moduleID, methodID, methodType);
+    });
+    Object.assign(module, constants);
+
     return module;
   }
 
@@ -335,6 +312,14 @@ class MessageQueue {
     return fn;
   }
 
+}
+
+function moduleHasConstants(moduleArray: Array<Object|Array<>>): boolean {
+  return !Array.isArray(moduleArray[1]);
+}
+
+function arrayContains<T>(array: Array<T>, value: T): boolean {
+  return array.indexOf(value) !== -1;
 }
 
 function createErrorFromErrorData(errorData: {message: string}): Error {
