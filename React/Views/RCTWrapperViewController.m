@@ -105,9 +105,9 @@ static BOOL RCTFindScrollViewAndRefreshContentInsetInView(UIView *view)
     [self.navigationController
      setNavigationBarHidden:_navItem.navigationBarHidden
      animated:animated];
-
-    _navItem.navigationItem = self.navigationItem;
+    
     _navItem.navigationBar = self.navigationController.navigationBar;
+    _navItem.navigationItem = self.navigationItem;
   }
   
   // TODO: find a way to make this less-tightly coupled to tab bar controller

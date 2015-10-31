@@ -65,18 +65,18 @@
   _navigationItem.rightBarButtonItem = self.rightButtonItem;
   _navigationItem.title = self.title;
   if (self.titleView) {
-    RCTRootView *root = (RCTRootView *)_navigationItem.titleView;
-    if (root) {
-      [root.bridge.eventDispatcher sendAppEventWithName:@"NavigationBarTitleView#update"
+    RCTRootView *rootView = (RCTRootView *)_navigationItem.titleView;
+    if (rootView) {
+      [rootView.bridge.eventDispatcher sendAppEventWithName:@"NavigationBarTitleView#update"
                                                    body:@{@"component": self.titleView, @"id": self.rootId}];
     }
     else {
-      root = [[RCTRootView alloc] initWithBridge:[((RCTBatchedBridge *)_bridge) parentBridge]
-                                      moduleName:@"NavigationBarTitleView"
-                               initialProperties:@{@"component": self.titleView, @"id": self.rootId}];
-      root.frame = CGRectMake(0, 0, 800, 44);
-      root.backgroundColor = [[UIColor alloc] initWithWhite:0 alpha:0];
-      _navigationItem.titleView = root;
+      rootView = [[RCTRootView alloc] initWithBridge:[((RCTBatchedBridge *)_bridge) parentBridge]
+                                           moduleName:@"NavigationBarTitleView"
+                                    initialProperties:@{@"component": self.titleView, @"id": self.rootId}];
+      rootView.frame = _navigationBar.frame;
+      rootView.backgroundColor = [[UIColor alloc] initWithWhite:0 alpha:0];
+      _navigationItem.titleView = rootView;
     }
   }
   else {
@@ -93,20 +93,20 @@
 - (void)setTitleView:(NSNumber *)titleView
 {
   _titleView = titleView;
-  if (_navigationItem) {
+  if (_navigationItem && _navigationBar) {
     if (self.titleView) {
-      RCTRootView *root = (RCTRootView *)_navigationItem.titleView;
-      if (root) {
-        [root.bridge.eventDispatcher sendAppEventWithName:@"NavigationBarTitleView#update"
+      RCTRootView *rootView = (RCTRootView *)_navigationItem.titleView;
+      if (rootView) {
+        [rootView.bridge.eventDispatcher sendAppEventWithName:@"NavigationBarTitleView#update"
                                                      body:@{@"component": self.titleView, @"id": self.rootId}];
       }
       else {
-        root = [[RCTRootView alloc] initWithBridge:[((RCTBatchedBridge *)_bridge) parentBridge]
-                                        moduleName:@"NavigationBarTitleView"
-                                 initialProperties:@{@"component": self.titleView, @"id": self.rootId}];
-        root.frame = CGRectMake(0, 0, 800, 44);
-        root.backgroundColor = [[UIColor alloc] initWithWhite:0 alpha:0];
-        _navigationItem.titleView = root;
+        rootView = [[RCTRootView alloc] initWithBridge:[((RCTBatchedBridge *)_bridge) parentBridge]
+                                             moduleName:@"NavigationBarTitleView"
+                                      initialProperties:@{@"component": self.titleView, @"id": self.rootId}];
+        rootView.frame = _navigationBar.frame;
+        rootView.backgroundColor = [[UIColor alloc] initWithWhite:0 alpha:0];
+        _navigationItem.titleView = rootView;
       }
     }
     else {

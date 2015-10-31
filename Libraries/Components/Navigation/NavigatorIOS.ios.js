@@ -681,14 +681,16 @@ var NavigatorIOS = React.createClass({
       this.state.routeStack.map(this._routeToStackItem) : null;
     return (
       <StaticContainer shouldUpdate={shouldRecurseToNavigator}>
-        <NavigatorTransitionerIOS
-          ref={TRANSITIONER_REF}
-          style={styles.transitioner}
-          vertical={this.props.vertical}
-          requestedTopOfStack={this.state.requestedTopOfStack}
-          onNavigationComplete={this.handleNavigationComplete}>
-          {items}
-        </NavigatorTransitionerIOS>
+        {shouldRecurseToNavigator && (
+          <NavigatorTransitionerIOS
+            ref={TRANSITIONER_REF}
+            style={styles.transitioner}
+            vertical={this.props.vertical}
+            requestedTopOfStack={this.state.requestedTopOfStack}
+            onNavigationComplete={this.handleNavigationComplete}>
+            {items}
+          </NavigatorTransitionerIOS>
+        )}
       </StaticContainer>
     );
   },

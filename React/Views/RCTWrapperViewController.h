@@ -29,7 +29,7 @@ didMoveToNavigationController:(UINavigationController *)navigationController;
 - (instancetype)initWithTabItem:(RCTTabBarItem *)tabItem;
 
 @property (nonatomic, weak) id<RCTWrapperViewControllerNavigationListener> navigationListener;
-@property (nonatomic, strong) RCTNavItem *navItem;
-@property (nonatomic, strong) RCTTabBarItem *tabItem;
+@property (nonatomic, weak) RCTNavItem *navItem;
+@property (nonatomic, weak) RCTTabBarItem *tabItem;
 
 @end
