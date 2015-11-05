@@ -395,6 +395,36 @@ RCT_NOT_IMPLEMENTED(- (instancetype)initWithCoder:(NSCoder *)aDecoder)
   _navigationController.interactivePopGestureRecognizer.enabled = YES;
 }
 
+- (void)reactAddControllerToClosestParent:(UIViewController *)viewController
+{
+  if (viewController.parentViewController) {
+    return;
+  }
+  
+  [super reactAddControllerToClosestParent:viewController];
+  
+  UITabBarController *tabBarController = viewController.tabBarController;
+  if (tabBarController) {
+    UITabBarItem *tabBarItem = viewController.tabBarItem;
+    
+    NSMutableArray *viewControllers = [[NSMutableArray alloc] initWithArray:tabBarController.viewControllers];
+    [viewControllers replaceObjectAtIndex:tabBarController.selectedIndex withObject:viewController];
+    
+    UIViewController *parentViewController = viewController.parentViewController;
+    while (parentViewController && parentViewController != tabBarController) {
+      UIViewController *next = parentViewController.parentViewController;
+      [parentViewController removeFromParentViewController];
+      parentViewController = next;
+    }
+    
+    [viewController.view removeFromSuperview];
+    [viewController removeFromParentViewController];
+    [viewController setTabBarItem:tabBarItem];
+    
+    [tabBarController setViewControllers:viewControllers];
+  }
+}
+
 /**
  * A React subview can be inserted/removed at any time, however if the
  * `requestedTopOfStack` changes, there had better be enough subviews present

@@ -32,6 +32,7 @@
 @property (nonatomic, strong)   UIImage  *backButtonIcon;
 @property (nonatomic, copy)     NSString *backButtonTitle;
 
+@property (nonatomic, assign)   BOOL hidesBottomBarWhenPushed;
 @property (nonatomic, assign)   BOOL navigationBarHidden;
 @property (nonatomic, assign)   BOOL shadowHidden;
 

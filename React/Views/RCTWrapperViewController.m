@@ -46,6 +46,7 @@
 {
   if ((self = [self initWithContentView:navItem])) {
     _navItem = navItem;
+    self.hidesBottomBarWhenPushed = _navItem.hidesBottomBarWhenPushed;
   }
   return self;
 }

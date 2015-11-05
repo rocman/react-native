@@ -652,6 +652,7 @@ var NavigatorIOS = React.createClass({
             rightButtonIcon={resolveAssetSource(route.rightButtonIcon)}
             rightButtonTitle={route.rightButtonTitle}
             onNavRightButtonTap={route.onRightButtonPress}
+            hidesBottomBarWhenPushed={route.hidesBottomBarWhenPushed}
             navigationBarHidden={this.props.navigationBarHidden}
             shadowHidden={this.props.shadowHidden}
             tintColor={this.props.tintColor}

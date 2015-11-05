@@ -21,6 +21,7 @@ RCT_EXPORT_MODULE()
   return [[RCTNavItem alloc] initWithBridge:self.bridge];
 }
 
+RCT_EXPORT_VIEW_PROPERTY(hidesBottomBarWhenPushed, BOOL)
 RCT_EXPORT_VIEW_PROPERTY(navigationBarHidden, BOOL)
 RCT_EXPORT_VIEW_PROPERTY(shadowHidden, BOOL)
 RCT_EXPORT_VIEW_PROPERTY(tintColor, UIColor)
