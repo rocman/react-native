@@ -139,10 +139,12 @@ var TabBarItemIOS = React.createClass({
     // if the tab has already been shown once, always continue to show it so we
     // preserve state between tab transitions
     if (this.state.hasBeenSelected) {
-      tabContents =
-        <StaticContainer shouldUpdate={this.props.selected}>
-          {this.props.content({ref: "content"})}
-        </StaticContainer>;
+      tabContents = (
+        <StaticContainer shouldUpdate={this.props.selected}>{
+          this.props.selected &&
+          this.props.content({ref: "content"})
+        }</StaticContainer>
+      );
     } else {
       tabContents = <View />;
     }
