@@ -12,6 +12,7 @@
 #import "RCTViewControllerProtocol.h"
 
 @class RCTNavItem;
+@class RCTTabBarItem;
 @class RCTWrapperViewController;
 
 @protocol RCTWrapperViewControllerNavigationListener <NSObject>
@@ -25,8 +26,10 @@ didMoveToNavigationController:(UINavigationController *)navigationController;
 
 - (instancetype)initWithContentView:(UIView *)contentView NS_DESIGNATED_INITIALIZER;
 - (instancetype)initWithNavItem:(RCTNavItem *)navItem;
+- (instancetype)initWithTabItem:(RCTTabBarItem *)tabItem;
 
 @property (nonatomic, weak) id<RCTWrapperViewControllerNavigationListener> navigationListener;
-@property (nonatomic, strong) RCTNavItem *navItem;
+@property (nonatomic, weak) RCTNavItem *navItem;
+@property (nonatomic, weak) RCTTabBarItem *tabItem;
 
 @end

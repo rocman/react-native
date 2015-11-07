@@ -9,7 +9,9 @@
 
 #import "RCTTabBarItem.h"
 
+#import "RCTBridge.h"
 #import "RCTConvert.h"
+#import "RCTEventDispatcher.h"
 #import "RCTLog.h"
 #import "UIView+React.h"
 
