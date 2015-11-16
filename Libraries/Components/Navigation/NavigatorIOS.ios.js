@@ -687,6 +687,7 @@ var NavigatorIOS = React.createClass({
             ref={TRANSITIONER_REF}
             style={styles.transitioner}
             vertical={this.props.vertical}
+            viewControllerKey={this.props.viewControllerKey}
             requestedTopOfStack={this.state.requestedTopOfStack}
             onNavigationComplete={this.handleNavigationComplete}>
             {items}

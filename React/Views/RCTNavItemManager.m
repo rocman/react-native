@@ -18,7 +18,7 @@ RCT_EXPORT_MODULE()
 
 - (UIView *)view
 {
-  return [RCTNavItem new];
+  return [[RCTNavItem alloc] initWithBridge:self.bridge];
 }
 
 RCT_EXPORT_VIEW_PROPERTY(hidesBottomBarWhenPushed, BOOL)
@@ -30,6 +30,7 @@ RCT_EXPORT_VIEW_PROPERTY(translucent, BOOL)
 
 RCT_EXPORT_VIEW_PROPERTY(title, NSString)
 RCT_EXPORT_VIEW_PROPERTY(titleTextColor, UIColor)
+RCT_EXPORT_VIEW_PROPERTY(titleView, NSNumber)
 
 RCT_EXPORT_VIEW_PROPERTY(backButtonIcon, UIImage)
 RCT_EXPORT_VIEW_PROPERTY(backButtonTitle, NSString)

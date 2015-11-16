@@ -48,6 +48,14 @@ var TabBarItemIOS = React.createClass({
       'top-rated',
     ]),
     /**
+     * 
+     */
+    viewControllerKey: React.PropTypes.string,
+    /**
+     * 
+     */
+    viewControllerType: React.PropTypes.string,
+    /**
      * A custom icon for the tab. It is ignored when a system icon is defined.
      */
     icon: Image.propTypes.source,
@@ -135,15 +143,26 @@ var TabBarItemIOS = React.createClass({
   },
 
   render: function() {
-    var tabContents = null;
+    this.viewControllerKey || (this.viewControllerKey = Math.random() + '');
+    
+    var tabContents, viewControllerType;
     // if the tab has already been shown once, always continue to show it so we
     // preserve state between tab transitions
     if (this.state.hasBeenSelected) {
+      var tabContent = (
+        this.props.selected &&
+        this.props.content({
+          ref: 'content',
+          viewControllerKey: this.viewControllerKey
+        })
+      );
+      if (tabContent && tabContent.type.displayName == 'NavigatorIOS') {
+        viewControllerType = 'RCTNavigationController';
+      }
       tabContents = (
-        <StaticContainer shouldUpdate={this.props.selected}>{
-          this.props.selected &&
-          this.props.content({ref: "content"})
-        }</StaticContainer>
+        <StaticContainer shouldUpdate={this.props.selected}>
+          {tabContent}
+        </StaticContainer>
       );
     } else {
       tabContents = <View />;
@@ -156,6 +175,8 @@ var TabBarItemIOS = React.createClass({
     return (
       <RCTTabBarItem
         {...this.props}
+        viewControllerKey={this.viewControllerKey}
+        viewControllerType={viewControllerType}
         icon={this.props.systemIcon || resolveAssetSource(this.props.icon)}
         selectedIcon={resolveAssetSource(this.props.selectedIcon)}
         badge={badge}
