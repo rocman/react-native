@@ -27,6 +27,7 @@ didMoveToNavigationController:(UINavigationController *)navigationController;
 - (instancetype)initWithContentView:(UIView *)contentView NS_DESIGNATED_INITIALIZER;
 - (instancetype)initWithNavItem:(RCTNavItem *)navItem;
 - (instancetype)initWithTabItem:(RCTTabBarItem *)tabItem;
+- (void)getReady:(void (^)())callback;
 
 @property (nonatomic, weak) id<RCTWrapperViewControllerNavigationListener> navigationListener;
 @property (nonatomic, weak) RCTNavItem *navItem;

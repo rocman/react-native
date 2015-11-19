@@ -16,6 +16,7 @@
 @interface RCTNavItem : UIView
 
 - (instancetype)initWithBridge:(RCTBridge *)bridge NS_DESIGNATED_INITIALIZER;
+- (void)getReady:(void(^)())callback;
 
 @property (nonatomic, weak)     UINavigationBar *navigationBar;
 @property (nonatomic, weak)     UINavigationItem *navigationItem;

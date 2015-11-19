@@ -541,9 +541,14 @@ RCT_NOT_IMPLEMENTED(- (instancetype)initWithCoder:(NSCoder *)aDecoder)
     if (reactPushOne) {
       UIView *lastView = _currentViews.lastObject;
       RCTWrapperViewController *vc = [[RCTWrapperViewController alloc] initWithNavItem:(RCTNavItem *)lastView];
-      vc.navigationListener = self;
       _numberOfViewControllerMovesToIgnore = 1;
-      [_navigationController pushViewController:vc animated:(currentReactCount > 1)];
+      vc.navigationListener = self;
+      if (currentReactCount > 1) {
+        [vc getReady:^{[_navigationController pushViewController:vc animated:YES];}];
+      }
+      else {
+        [_navigationController pushViewController:vc animated:NO];
+      }
     } else if (reactPopN) {
       UIViewController *viewControllerToPopTo = _navigationController.viewControllers[(currentReactCount - 1)];
       _numberOfViewControllerMovesToIgnore = viewControllerCount - currentReactCount;

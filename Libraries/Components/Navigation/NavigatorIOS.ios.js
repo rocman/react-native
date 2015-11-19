@@ -649,7 +649,7 @@ var NavigatorIOS = React.createClass({
     return (
       <StaticContainer key={'nav_' + i} shouldUpdate={shouldUpdateChild}>
         {shouldUpdateChild && (
-          <RCTNavigatorItem
+          <RCTNavigationItem
             title={route.title}
             titleView={NavigationBarTitleView.hook(route.titleView, route)}
             style={[
@@ -679,7 +679,7 @@ var NavigatorIOS = React.createClass({
                 {...route.passProps}
               />
             </StaticContainer>
-          </RCTNavigatorItem> 
+          </RCTNavigationItem> 
         )}
       </StaticContainer>
     );
@@ -736,7 +736,8 @@ var styles = StyleSheet.create({
 });
 
 var RCTNavigator = requireNativeComponent('RCTNavigator');
-var RCTNavigatorItem = requireNativeComponent('RCTNavItem');
+var RCTNavigationItem = requireNativeComponent('RCTNavItem');
+var RCTNavigationBarTitleViewWrapper = requireNativeComponent('RCTNavigationBarTitleViewWrapper');
 
 module.exports = NavigatorIOS;
 
@@ -774,15 +775,10 @@ var NavigationBarTitleView = React.createClass({
     navigationBarTitleViews[this.props.id] = this;
     var Component = NavigationBarTitleView.take(index);
     return (
-      <View ref="wrapper" onLayout={this.onLayout} style={{flex:1,backgroundColor:'red',alignSelf:'center'}}>
-        {Component ? Component() : <Text>nothing</Text>}
-      </View>
+      <RCTNavigationBarTitleViewWrapper style={{height:44,alignSelf:'center'}}>
+        {Component ? Component() : <View />}
+      </RCTNavigationBarTitleViewWrapper>
     );
-  },
-  onLayout: function(e) {
-    this.refs.wrapper.measure(function(x, y, width, height) {
-      console.log(arguments);
-    });
   }
 });
 var NativeAppEventEmitter = require('RCTNativeAppEventEmitter');

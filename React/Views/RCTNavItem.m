@@ -9,11 +9,12 @@
 
 #import "RCTNavItem.h"
 #import "RCTBridge.h"
-#import "RCTRootView.h"
+#import "RCTNavigationBarTitleViewContainer.h"
 
 @implementation RCTNavItem
 {
   NSNumber *_rootId;
+  RCTNavigationBarTitleViewContainer *_rootView;
   __weak RCTBridge *_bridge;
 }
 
@@ -21,12 +22,15 @@
 {
   RCTAssertParam(bridge);
   
-  if ((self = [super init])) {
+  if ((self = [super initWithFrame:CGRectZero])) {
     _bridge = bridge;
   }
   
   return self;
 }
+
+RCT_NOT_IMPLEMENTED(- (instancetype)initWithFrame:(CGRect)frame)
+RCT_NOT_IMPLEMENTED(- (instancetype)initWithCoder:(NSCoder *)coder)
 
 - (NSNumber *)rootId
 {
@@ -64,24 +68,7 @@
   _navigationItem.leftBarButtonItem = self.leftButtonItem;
   _navigationItem.rightBarButtonItem = self.rightButtonItem;
   _navigationItem.title = self.title;
-  if (self.titleView) {
-    RCTRootView *rootView = (RCTRootView *)_navigationItem.titleView;
-    if (rootView) {
-      [rootView.bridge.eventDispatcher sendAppEventWithName:@"NavigationBarTitleView#update"
-                                                   body:@{@"component": self.titleView, @"id": self.rootId}];
-    }
-    else {
-      rootView = [[RCTRootView alloc] initWithBridge:[((RCTBatchedBridge *)_bridge) parentBridge]
-                                           moduleName:@"NavigationBarTitleView"
-                                    initialProperties:@{@"component": self.titleView, @"id": self.rootId}];
-      rootView.frame = _navigationBar.frame;
-      rootView.backgroundColor = [[UIColor alloc] initWithWhite:0 alpha:0];
-      _navigationItem.titleView = rootView;
-    }
-  }
-  else {
-    _navigationItem.titleView = nil;
-  }
+  _navigationItem.titleView = _rootView;
 }
 
 - (void)setTitle:(NSString *)title
@@ -92,27 +79,22 @@
 
 - (void)setTitleView:(NSNumber *)titleView
 {
-  _titleView = titleView;
-  if (_navigationItem && _navigationBar) {
-    if (self.titleView) {
-      RCTRootView *rootView = (RCTRootView *)_navigationItem.titleView;
-      if (rootView) {
-        [rootView.bridge.eventDispatcher sendAppEventWithName:@"NavigationBarTitleView#update"
-                                                     body:@{@"component": self.titleView, @"id": self.rootId}];
-      }
-      else {
-        rootView = [[RCTRootView alloc] initWithBridge:[((RCTBatchedBridge *)_bridge) parentBridge]
-                                             moduleName:@"NavigationBarTitleView"
-                                      initialProperties:@{@"component": self.titleView, @"id": self.rootId}];
-        rootView.frame = _navigationBar.frame;
-        rootView.backgroundColor = [[UIColor alloc] initWithWhite:0 alpha:0];
-        _navigationItem.titleView = rootView;
-      }
+  if ((_titleView = titleView)) {
+    NSDictionary *properties = @{@"component": self.titleView, @"id": self.rootId};
+    if (_rootView) {
+      RCTEventDispatcher *eventDispatcher = _rootView.bridge.eventDispatcher;
+      [eventDispatcher sendAppEventWithName:@"NavigationBarTitleView#update"
+                                       body:properties];
     }
     else {
-      _navigationItem.titleView = nil;
+      RCTBridge *bridgeForRoot = [((RCTBatchedBridge *)_bridge) parentBridge];
+      _rootView = [[RCTNavigationBarTitleViewContainer alloc] initWithBridge:bridgeForRoot
+                                           moduleName:@"NavigationBarTitleView"
+                                    initialProperties:properties];
+      _rootView.backgroundColor = [[UIColor alloc] initWithWhite:0 alpha:0];
     }
   }
+  _navigationItem.titleView = _rootView;
 }
 
 - (void)setBackButtonTitle:(NSString *)backButtonTitle
@@ -233,6 +215,17 @@
   if (_onNavRightButtonTap) {
     _onNavRightButtonTap(nil);
   }
+}
+
+- (void)getReady:(void (^)())callback
+{
+  if (_rootView) {
+    _rootView.onDidGetReady = callback;
+    UIWindow *window = [UIApplication sharedApplication].windows[0];
+    [window addSubview:_rootView];
+    return;
+  }
+  callback();
 }
 
 static UIView *RCTFindNavBarShadowViewInView(UIView *view)

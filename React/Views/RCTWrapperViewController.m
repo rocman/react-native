@@ -159,6 +159,13 @@ static BOOL RCTFindScrollViewAndRefreshContentInsetInView(UIView *view)
   }
 }
 
+- (void)getReady:(void (^)())callback
+{
+  if ([_contentView isKindOfClass:[RCTNavItem class]]) {
+    [(RCTNavItem *)_contentView getReady:callback];
+  }
+}
+
 - (void)loadView
 {
   // Add a wrapper so that the wrapper view managed by the
