@@ -79,7 +79,11 @@ RCT_NOT_IMPLEMENTED(- (instancetype)initWithCoder:(NSCoder *)coder)
 
 - (void)setTitleView:(NSNumber *)titleView
 {
-  if ((_titleView = titleView)) {
+  _titleView = titleView;
+  if (_titleView.longValue < 0) {
+    _rootView = nil;
+  }
+  else {
     NSDictionary *properties = @{@"component": self.titleView, @"id": self.rootId};
     if (_rootView) {
       RCTEventDispatcher *eventDispatcher = _rootView.bridge.eventDispatcher;

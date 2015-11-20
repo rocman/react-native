@@ -193,7 +193,7 @@ var NavigatorIOS = React.createClass({
       /**
        * The title view displayed in the nav bar for this route
        */
-      titleView: PropTypes.element,
+      titleView: PropTypes.func,
 
       /**
        * Specify additional props passed to the component. NavigatorIOS will
@@ -750,7 +750,7 @@ var NavigationBarTitleView = React.createClass({
   statics: {
     hook: function(renderer, holder) {
       if (renderer == null) {
-        return null;
+        return -1;
       }
       var index = components.findIndex(c => c == holder);
       delete components[index];
