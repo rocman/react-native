@@ -12,33 +12,25 @@
 
 @implementation RCTNavigationBarTitleViewWrapper
 
-- (instancetype)initWithFrame:(CGRect)frame
-{
-  if ((self = [super initWithFrame:frame])) {
-    [self setAlpha:0];
-  }
-  return self;
-}
-
 - (void)layoutSubviews
 {
   [super layoutSubviews];
   
-  UIView *view = self.superview;
+  UIView *view = self;
   while (view) {
-    if ([view isKindOfClass:[RCTNavigationBarTitleViewContainer class]]) {
-      RCTNavigationBarTitleViewContainer *container = (RCTNavigationBarTitleViewContainer *)view;
-      CGRect temp = container.frame;
-//      temp.origin = CGPointZero;
-      temp.size = self.frame.size;
-      container.frame = temp;
+    UIView *superview = view.superview;
+    CGRect temp = superview.frame;
+    temp.origin = CGPointZero;
+    temp.size = view.frame.size;
+    view.frame = temp;
+    superview.frame = temp;
+    if ([superview isKindOfClass:[RCTNavigationBarTitleViewContainer class]]) {
+      RCTNavigationBarTitleViewContainer *container = (RCTNavigationBarTitleViewContainer *)superview;
       [container didGetReady];
-      [self setAlpha:1];
       return;
     }
-    view = view.superview;
+    view = superview;
   }
-//  [self setAlpha:1];
 }
 
 @end
