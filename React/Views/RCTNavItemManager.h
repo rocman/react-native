@@ -11,5 +11,6 @@
 
 @interface RCTNavItemManager : RCTViewManager
 
-@end
+- (NSNumber *)markCallback:(void (^)())callback;
 
+@end

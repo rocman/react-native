@@ -15,17 +15,17 @@
 {
   NSNumber *_rootId;
   RCTNavigationBarTitleViewContainer *_rootView;
-  __weak RCTBridge *_bridge;
+  __weak RCTNavItemManager *_manager;
 }
 
-- (instancetype)initWithBridge:(RCTBridge *)bridge
+- (instancetype)initWithManager:(RCTNavItemManager *)manager
 {
-  RCTAssertParam(bridge);
+  RCTAssertParam(manager);
   
   if ((self = [super initWithFrame:CGRectZero])) {
-    _bridge = bridge;
+    _manager = manager;
   }
-  
+
   return self;
 }
 
@@ -81,23 +81,33 @@ RCT_NOT_IMPLEMENTED(- (instancetype)initWithCoder:(NSCoder *)coder)
 {
   _titleView = titleView;
   if (_titleView.longValue < 0) {
-    _rootView = nil;
+    _navigationItem.titleView = _rootView = nil;
+    return;
   }
-  else {
-    NSDictionary *properties = @{@"component": self.titleView, @"id": self.rootId};
-    if (_rootView) {
-      RCTEventDispatcher *eventDispatcher = _rootView.bridge.eventDispatcher;
-      [eventDispatcher sendAppEventWithName:@"NavigationBarTitleView#update"
-                                       body:properties];
-    }
-    else {
-      RCTBridge *bridgeForRoot = [((RCTBatchedBridge *)_bridge) parentBridge];
-      _rootView = [[RCTNavigationBarTitleViewContainer alloc] initWithBridge:bridgeForRoot
-                                           moduleName:@"NavigationBarTitleView"
-                                    initialProperties:properties];
-      _rootView.backgroundColor = [[UIColor alloc] initWithWhite:0 alpha:0];
-    }
+  NSDictionary *properties = @{@"component": self.titleView, @"id": self.rootId};
+  if (_rootView) {
+    _navigationItem.titleView = [UIView new];
+    _rootView.frame = CGRectZero;
+    _rootView.contentView.frame = CGRectZero;
+    
+    NSMutableDictionary *propertiesWithCallback = [NSMutableDictionary dictionaryWithDictionary:properties];
+    NSNumber *callbackKey = [_manager markCallback:^{
+      _navigationItem.titleView = _rootView;
+    }];
+    [propertiesWithCallback setObject:callbackKey forKey:@"callbackKey"];
+    
+    RCTEventDispatcher *eventDispatcher = _rootView.bridge.eventDispatcher;
+    [eventDispatcher sendAppEventWithName:@"NavigationBarTitleView#update"
+                                     body:propertiesWithCallback];
+    
+    [[UIApplication sharedApplication].windows[0] insertSubview:_rootView atIndex:0];
+    return;
   }
+  RCTBridge *bridgeForRoot = [((RCTBatchedBridge *)_manager.bridge) parentBridge];
+  _rootView = [[RCTNavigationBarTitleViewContainer alloc] initWithBridge:bridgeForRoot
+                                       moduleName:@"NavigationBarTitleView"
+                                initialProperties:properties];
+  _rootView.backgroundColor = [[UIColor alloc] initWithWhite:0 alpha:0];
   _navigationItem.titleView = _rootView;
 }
 

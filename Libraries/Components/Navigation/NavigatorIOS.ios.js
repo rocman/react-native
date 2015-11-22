@@ -742,7 +742,6 @@ var RCTNavigationBarTitleViewWrapper = requireNativeComponent('RCTNavigationBarT
 module.exports = NavigatorIOS;
 
 var AppRegistry = require('AppRegistry');
-var ReactNativeTagHandles = require('ReactNativeTagHandles');
 var Text = require('Text');
 var components = [];
 var navigationBarTitleViews = {};
@@ -753,10 +752,19 @@ var NavigationBarTitleView = React.createClass({
         return -1;
       }
       var index = components.findIndex(c => c == holder);
-      delete components[index];
-      index = components.length;
-      components[index] = holder;
-      holder.renderer = renderer;
+      if (index < 0) {
+        index = components.length;
+        components[index] = holder;
+        holder.renderer = renderer;
+      }
+      else {
+        if (holder.renderer != renderer) {
+          delete components[index];
+          index = components.length;
+          components[index] = holder;
+          holder.renderer = renderer;
+        }
+      }
       return index;
     },
     unhook: function(holder) {
@@ -782,11 +790,13 @@ var NavigationBarTitleView = React.createClass({
   }
 });
 var NativeAppEventEmitter = require('RCTNativeAppEventEmitter');
+var RCTNavigationItemManager = require('NativeModules').NavItemManager;
 NativeAppEventEmitter.addListener('NavigationBarTitleView#update', function(args) {
   var navigationBarTitleView = navigationBarTitleViews[args.id];
   if (navigationBarTitleView) {
-    navigationBarTitleView.setState({
-      component: args.component
+    navigationBarTitleView.setState({component: args.component}, args.callbackKey && function() {
+      // setTimeout so that the layout logic runs before invoking callback.
+      setTimeout(RCTNavigationItemManager.invokeCallback.bind(null, args.callbackKey));
     });
   }
 });
