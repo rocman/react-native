@@ -51,12 +51,6 @@ RCT_EXTERN NSArray<Class> *RCTGetModuleClasses(void);
 
 @end
 
-@interface RCTBatchedBridge : RCTBridge
-
-@property (nonatomic, weak) RCTBridge *parentBridge;
-
-@end
-
 @implementation RCTBatchedBridge
 {
   BOOL _loading;

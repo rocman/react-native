@@ -9,8 +9,12 @@
 
 #import "RCTTabBarItem.h"
 
+#import "RCTBridge.h"
 #import "RCTConvert.h"
+#import "RCTEventDispatcher.h"
 #import "RCTLog.h"
+#import "RCTNavigator.h"
+#import "RCTTabBar.h"
 #import "UIView+React.h"
 
 @implementation RCTTabBarItem
@@ -84,6 +88,12 @@
 
 - (UIViewController *)reactViewController
 {
+  if (self.viewControllerType) {
+    Class class = NSClassFromString(self.viewControllerType);
+    if (class) {
+      return [class viewControllerWithKey:self.viewControllerKey];
+    }
+  }
   return self.superview.reactViewController;
 }
 

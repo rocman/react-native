@@ -16,6 +16,8 @@
 #import "RCTLog.h"
 #import "RCTNavItem.h"
 #import "RCTScrollView.h"
+#import "RCTTabBar.h"
+#import "RCTTabBarItem.h"
 #import "RCTUtils.h"
 #import "RCTView.h"
 #import "RCTWrapperViewController.h"
@@ -41,11 +43,9 @@ NSInteger kNeverProgressed = -10000;
 
 // http://stackoverflow.com/questions/5115135/uinavigationcontroller-how-to-cancel-the-back-button-event
 // There's no other way to do this unfortunately :(
-@interface RCTNavigationController : UINavigationController <UINavigationBarDelegate>
-{
-  dispatch_block_t _scrollCallback;
-}
+@interface RCTNavigationController ()
 
+@property (nonatomic, copy) dispatch_block_t scrollCallback;
 @property (nonatomic, assign) RCTNavigationLock navigationLock;
 
 @end
@@ -132,18 +132,26 @@ NSInteger kNeverProgressed = -10000;
  * (`didMoveToNavigationController` is a suitable hook).
  *
  */
+
+static NSMapTable<NSString *, RCTNavigationController *> *_navigationControllers;
+
 @implementation RCTNavigationController
 
-/**
- * @param callback Callback that is invoked when a "scroll" interaction begins
- * so that `RCTNavigator` can notify `JavaScript`.
- */
-- (instancetype)initWithScrollCallback:(dispatch_block_t)callback
++ (instancetype)viewControllerWithKey:(NSString *)key
 {
-  if ((self = [super initWithNibName:nil bundle:nil])) {
-    _scrollCallback = callback;
+  if (key) {
+    if (_navigationControllers == nil) {
+      _navigationControllers = [NSMapTable weakToWeakObjectsMapTable];
+    }
+    RCTNavigationController *instance = [_navigationControllers objectForKey:key];
+    if (instance) {
+      return instance;
+    }
+    instance = [[RCTNavigationController alloc] initWithNibName:nil bundle:nil];
+    [_navigationControllers setObject:instance forKey:key];
+    return instance;
   }
-  return self;
+  return [[RCTNavigationController alloc] initWithNibName:nil bundle:nil];
 }
 
 /**
@@ -284,15 +292,6 @@ NSInteger kNeverProgressed = -10000;
     _previousRequestedTopOfStack = kNeverRequested; // So that we initialize with a push.
     _previousViews = @[];
     _currentViews = [[NSMutableArray alloc] initWithCapacity:0];
-    __weak RCTNavigator *weakSelf = self;
-    _navigationController = [[RCTNavigationController alloc] initWithScrollCallback:^{
-      [weakSelf dispatchFakeScrollEvent];
-    }];
-    _navigationController.delegate = self;
-    RCTAssert([self requestSchedulingJavaScriptNavigation], @"Could not acquire JS navigation lock on init");
-
-    [self addSubview:_navigationController.view];
-    [_navigationController.view addSubview:_dummyView];
   }
   return self;
 }
@@ -332,6 +331,29 @@ RCT_NOT_IMPLEMENTED(- (instancetype)initWithCoder:(NSCoder *)aDecoder)
   }
 }
 
+- (void)setViewControllerKey:(NSString *)viewControllerKey
+{
+  _viewControllerKey = viewControllerKey;
+  
+  __weak RCTNavigator *weakSelf = self;
+  _navigationController = [RCTNavigationController viewControllerWithKey:viewControllerKey];
+  _navigationController.scrollCallback = ^{
+    [weakSelf dispatchFakeScrollEvent];
+  };
+  
+  _navigationController.delegate = self;
+  RCTAssert([self requestSchedulingJavaScriptNavigation], @"Could not acquire JS navigation lock on init");
+  
+  [self addSubview:_navigationController.view];
+  [_navigationController.view addSubview:_dummyView];
+}
+
+- (void)didMoveToWindow
+{
+  [super didMoveToWindow];
+  [self reactAddControllerToClosestParent:_navigationController];
+}
+
 - (void)dealloc
 {
   _navigationController.delegate = nil;
@@ -369,7 +391,7 @@ RCT_NOT_IMPLEMENTED(- (instancetype)initWithCoder:(NSCoder *)aDecoder)
     _currentlyTransitioningTo = indexOfTo;
     self.paused = NO;
   }
-  completion:^(__unused id<UIViewControllerTransitionCoordinatorContext> context) {
+  completion: ^(__unused id<UIViewControllerTransitionCoordinatorContext> context) {
     [weakSelf freeLock];
     _currentlyTransitioningFrom = 0;
     _currentlyTransitioningTo = 0;
@@ -418,7 +440,6 @@ RCT_NOT_IMPLEMENTED(- (instancetype)initWithCoder:(NSCoder *)aDecoder)
 - (void)layoutSubviews
 {
   [super layoutSubviews];
-  [self reactAddControllerToClosestParent:_navigationController];
   _navigationController.view.frame = self.bounds;
 }
 
@@ -484,10 +505,9 @@ RCT_NOT_IMPLEMENTED(- (instancetype)initWithCoder:(NSCoder *)aDecoder)
   BOOL jsMakingNoProgressAndDoesntNeedTo =
     //    --- previously caught up --------          ------- still caught up ----------
     viewControllerCount == previousReactCount && currentReactCount == previousReactCount;
-
-BOOL jsGettingtooSlow =
-  //    --- previously not caught up --------          ------- no longer caught up ----------
-  viewControllerCount < previousReactCount && currentReactCount < previousReactCount;
+  BOOL jsGettingtooSlow =
+    //    --- previously not caught up --------          ------- no longer caught up ----------
+    viewControllerCount < previousReactCount && currentReactCount < previousReactCount;
 
   BOOL reactPushOne = jsGettingAhead && currentReactCount == previousReactCount + 1;
   BOOL reactPopN = jsGettingAhead && currentReactCount < previousReactCount;
@@ -521,9 +541,14 @@ BOOL jsGettingtooSlow =
     if (reactPushOne) {
       UIView *lastView = _currentViews.lastObject;
       RCTWrapperViewController *vc = [[RCTWrapperViewController alloc] initWithNavItem:(RCTNavItem *)lastView];
-      vc.navigationListener = self;
       _numberOfViewControllerMovesToIgnore = 1;
-      [_navigationController pushViewController:vc animated:(currentReactCount > 1)];
+      vc.navigationListener = self;
+      if (currentReactCount > 1) {
+        [vc getReady:^{[_navigationController pushViewController:vc animated:YES];}];
+      }
+      else {
+        [_navigationController pushViewController:vc animated:NO];
+      }
     } else if (reactPopN) {
       UIViewController *viewControllerToPopTo = _navigationController.viewControllers[(currentReactCount - 1)];
       _numberOfViewControllerMovesToIgnore = viewControllerCount - currentReactCount;

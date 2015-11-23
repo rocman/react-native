@@ -7,8 +7,15 @@
  * of patent rights can be found in the PATENTS file in the same directory.
  */
 
-#import "RCTViewManager.h"
+#import <UIKit/UIKit.h>
 
-@interface RCTNavItemManager : RCTViewManager
+#import "RCTRootView.h"
+
+@interface RCTNavigationBarTitleViewContainer: RCTRootView
+
+@property (nonatomic, weak) UINavigationItem* navigationItem;
+@property (nonatomic, copy) void (^onDidGetReady)();
+
+- (void)didGetReady;
 
 @end

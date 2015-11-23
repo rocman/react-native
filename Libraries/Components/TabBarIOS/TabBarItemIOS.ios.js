@@ -48,6 +48,14 @@ var TabBarItemIOS = React.createClass({
       'top-rated',
     ]),
     /**
+     * 
+     */
+    viewControllerKey: React.PropTypes.string,
+    /**
+     * 
+     */
+    viewControllerType: React.PropTypes.string,
+    /**
      * A custom icon for the tab. It is ignored when a system icon is defined.
      */
     icon: Image.propTypes.source,
@@ -57,10 +65,30 @@ var TabBarItemIOS = React.createClass({
      */
     selectedIcon: Image.propTypes.source,
     /**
+     * A function that returns a component as the content of the tab.
+     */
+    content: React.PropTypes.func,
+    /**
      * Callback when this tab is being selected, you should change the state of your
      * component to set selected={true}.
      */
     onPress: React.PropTypes.func,
+    /**
+     * Callback when this tab will appear
+     */
+    onWillAppear: React.PropTypes.func,
+    /**
+     * Callback when this tab did appear
+     */
+    onDidAppear: React.PropTypes.func,
+    /**
+     * Callback when this tab will disappear
+     */
+    onWillDisappear: React.PropTypes.func,
+    /**
+     * Callback when this tab did disappear
+     */
+    onDidDisappear: React.PropTypes.func,
     /**
      * It specifies whether the children are visible or not. If you see a
      * blank content, you probably forgot to add a selected one.
@@ -87,6 +115,18 @@ var TabBarItemIOS = React.createClass({
     if (this.props.selected) {
       this.setState({hasBeenSelected: true});
     }
+    this.forwardWillAppearToContent = (
+      this.forwardToContent.bind(this, 'componentWillAppear')
+    );
+    this.forwardDidAppearToContent = (
+      this.forwardToContent.bind(this, 'componentDidAppear')
+    );
+    this.forwardWillDisapearToContent = (
+      this.forwardToContent.bind(this, 'componentWillDisappear')
+    );
+    this.forwardDidDisappearToContent = (
+      this.forwardToContent.bind(this, 'componentDidDisappear')
+    );
   },
 
   componentWillReceiveProps: function(nextProps: { selected?: boolean }) {
@@ -94,16 +134,36 @@ var TabBarItemIOS = React.createClass({
       this.setState({hasBeenSelected: true});
     }
   },
+  
+  forwardToContent: function(methodName) {
+    var content = this.refs.content;
+    if (content && content[methodName]) {
+      content[methodName]();
+    }
+  },
 
   render: function() {
-    var tabContents = null;
+    this.viewControllerKey || (this.viewControllerKey = Math.random() + '');
+    
+    var tabContents, viewControllerType;
     // if the tab has already been shown once, always continue to show it so we
     // preserve state between tab transitions
     if (this.state.hasBeenSelected) {
-      tabContents =
+      var tabContent = (
+        this.props.selected &&
+        this.props.content({
+          ref: 'content',
+          viewControllerKey: this.viewControllerKey
+        })
+      );
+      if (tabContent && tabContent.type.displayName == 'NavigatorIOS') {
+        viewControllerType = 'RCTNavigationController';
+      }
+      tabContents = (
         <StaticContainer shouldUpdate={this.props.selected}>
-          {this.props.children}
-        </StaticContainer>;
+          {tabContent}
+        </StaticContainer>
+      );
     } else {
       tabContents = <View />;
     }
@@ -115,10 +175,16 @@ var TabBarItemIOS = React.createClass({
     return (
       <RCTTabBarItem
         {...this.props}
+        viewControllerKey={this.viewControllerKey}
+        viewControllerType={viewControllerType}
         icon={this.props.systemIcon || resolveAssetSource(this.props.icon)}
         selectedIcon={resolveAssetSource(this.props.selectedIcon)}
         badge={badge}
-        style={[styles.tab, this.props.style]}>
+        style={[styles.tab, this.props.style]}
+        onWillAppear={this.forwardWillAppearToContent}
+        onDidAppear={this.forwardDidAppearToContent}
+        onWillDisappear={this.forwardWillDisappearToContent}
+        onDidDisappear={this.forwardDidDisappearToContent}>
         {tabContents}
       </RCTTabBarItem>
     );

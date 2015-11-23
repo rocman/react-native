@@ -13,9 +13,16 @@
 
 @class RCTBridge;
 
+@interface RCTNavigationController : UINavigationController <UINavigationBarDelegate>
+
++ (instancetype)viewControllerWithKey:(NSString *)key;
+
+@end
+
 @interface RCTNavigator : UIView <RCTFrameUpdateObserver>
 
 @property (nonatomic, strong) UIView *reactNavSuperviewLink;
+@property (nonatomic, copy)   NSString *viewControllerKey;
 @property (nonatomic, assign) NSInteger requestedTopOfStack;
 
 - (instancetype)initWithBridge:(RCTBridge *)bridge NS_DESIGNATED_INITIALIZER;

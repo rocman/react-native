@@ -104,9 +104,10 @@
   if (!controller.parentViewController) {
     UIView *parentView = (UIView *)self.reactSuperview;
     while (parentView) {
-      if (parentView.reactViewController) {
-        [parentView.reactViewController addChildViewController:controller];
-        [controller didMoveToParentViewController:parentView.reactViewController];
+      UIViewController *parentViewController = parentView.reactViewController;
+      if (parentViewController && parentViewController != controller) {
+        [parentViewController addChildViewController:controller];
+        [controller didMoveToParentViewController:parentViewController];
         break;
       }
       parentView = (UIView *)parentView.reactSuperview;
