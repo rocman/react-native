@@ -11,13 +11,19 @@
 
 @implementation RCTNavigationBarTitleViewContainer
 
+- (void)setNavigationItem:(UINavigationItem *)navigationItem
+{
+  _navigationItem = navigationItem;
+  _navigationItem.titleView = self;
+}
+
 - (void)didGetReady
 {
   if (_onDidGetReady) {
     _onDidGetReady();
     _onDidGetReady = nil;
-    [self removeFromSuperview];
   }
+  _navigationItem.titleView = self;
 }
 
 @end

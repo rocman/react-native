@@ -13,6 +13,7 @@
 
 @interface RCTNavigationBarTitleViewContainer: RCTRootView
 
+@property (nonatomic, weak) UINavigationItem* navigationItem;
 @property (nonatomic, copy) void (^onDidGetReady)();
 
 - (void)didGetReady;

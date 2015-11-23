@@ -63,12 +63,14 @@ RCT_NOT_IMPLEMENTED(- (instancetype)initWithCoder:(NSCoder *)coder)
   if (_navigationItem == navigationItem) {
     return;
   }
+  
   _navigationItem = navigationItem;
   _navigationItem.backBarButtonItem = self.backButtonItem;
   _navigationItem.leftBarButtonItem = self.leftButtonItem;
   _navigationItem.rightBarButtonItem = self.rightButtonItem;
   _navigationItem.title = self.title;
-  _navigationItem.titleView = _rootView;
+  
+  _rootView.navigationItem = _navigationItem;
 }
 
 - (void)setTitle:(NSString *)title
@@ -85,30 +87,12 @@ RCT_NOT_IMPLEMENTED(- (instancetype)initWithCoder:(NSCoder *)coder)
     return;
   }
   NSDictionary *properties = @{@"component": self.titleView, @"id": self.rootId};
-  if (_rootView) {
-    _navigationItem.titleView = [UIView new];
-    _rootView.frame = CGRectZero;
-    _rootView.contentView.frame = CGRectZero;
-    
-    NSMutableDictionary *propertiesWithCallback = [NSMutableDictionary dictionaryWithDictionary:properties];
-    NSNumber *callbackKey = [_manager markCallback:^{
-      _navigationItem.titleView = _rootView;
-    }];
-    [propertiesWithCallback setObject:callbackKey forKey:@"callbackKey"];
-    
-    RCTEventDispatcher *eventDispatcher = _rootView.bridge.eventDispatcher;
-    [eventDispatcher sendAppEventWithName:@"NavigationBarTitleView#update"
-                                     body:propertiesWithCallback];
-    
-    [[UIApplication sharedApplication].windows[0] insertSubview:_rootView atIndex:0];
-    return;
-  }
   RCTBridge *bridgeForRoot = [((RCTBatchedBridge *)_manager.bridge) parentBridge];
   _rootView = [[RCTNavigationBarTitleViewContainer alloc] initWithBridge:bridgeForRoot
                                        moduleName:@"NavigationBarTitleView"
                                 initialProperties:properties];
   _rootView.backgroundColor = [[UIColor alloc] initWithWhite:0 alpha:0];
-  _navigationItem.titleView = _rootView;
+  _rootView.navigationItem = _navigationItem;
 }
 
 - (void)setBackButtonTitle:(NSString *)backButtonTitle
