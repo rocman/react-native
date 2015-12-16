@@ -664,7 +664,7 @@ var NavigatorIOS = React.createClass({
           <RCTNavigatorItem
             {...route}
             {...props}
-            titleView=NavigationBarTitleView.hook(route.titleView, route)
+            titleView={NavigationBarTitleView.hook(route.titleView, route)}
             style={[
               styles.stackItem,
               itemWrapperStyle,

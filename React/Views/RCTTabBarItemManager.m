@@ -28,7 +28,6 @@ RCT_EXPORT_VIEW_PROPERTY(badge, id /* NSString or NSNumber */)
 RCT_EXPORT_VIEW_PROPERTY(selected, BOOL)
 RCT_EXPORT_VIEW_PROPERTY(icon, UIImage)
 RCT_EXPORT_VIEW_PROPERTY(systemIcon, UITabBarSystemItem)
-RCT_EXPORT_VIEW_PROPERTY(onPress, RCTBubblingEventBlock)
 
 RCT_REMAP_VIEW_PROPERTY(selectedIcon, barItem.selectedImage, UIImage)
 
