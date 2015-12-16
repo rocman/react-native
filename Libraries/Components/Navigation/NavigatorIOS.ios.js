@@ -655,13 +655,13 @@ var NavigatorIOS = React.createClass({
     var {component, wrapperStyle, passProps, ...route} = route;
     var {itemWrapperStyle, ...props} = this.props;
     var shouldUpdateChild =
-      this.state.updatingAllIndicesAtOrBeyond &&
+      this.state.updatingAllIndicesAtOrBeyond != null &&
       this.state.updatingAllIndicesAtOrBeyond <= i;
     var Component = component;
     return (
       <StaticContainer key={'nav' + i} shouldUpdate={shouldUpdateChild}>
         {shouldUpdateChild && (
-          <RCTNavigatorItem
+          <RCTNavigationItem
             {...route}
             {...props}
             titleView={NavigationBarTitleView.hook(route.titleView, route)}
@@ -677,7 +677,7 @@ var NavigatorIOS = React.createClass({
                 {...route.passProps}
               />
             </StaticContainer>
-          </RCTNavigatorItem>
+          </RCTNavigationItem>
         )}
       </StaticContainer>
     );
