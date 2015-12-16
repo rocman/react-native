@@ -9,6 +9,7 @@
 
 #import "RCTViewManager.h"
 
-@interface RCTNavItemManager : RCTViewManager
+@interface RCTNavigationBarTitleViewWrapperManager : RCTViewManager
 
 @end
+

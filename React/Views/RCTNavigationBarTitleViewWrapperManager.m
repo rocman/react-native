@@ -7,8 +7,16 @@
  * of patent rights can be found in the PATENTS file in the same directory.
  */
 
-#import "RCTViewManager.h"
+#import "RCTNavigationBarTitleViewWrapperManager.h"
+#import "RCTNavigationBarTitleViewWrapper.h"
 
-@interface RCTNavItemManager : RCTViewManager
+@implementation RCTNavigationBarTitleViewWrapperManager
+
+RCT_EXPORT_MODULE()
+
+- (UIView *)view
+{
+  return [RCTNavigationBarTitleViewWrapper new];
+}
 
 @end

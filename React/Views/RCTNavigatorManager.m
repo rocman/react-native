@@ -24,6 +24,7 @@ RCT_EXPORT_MODULE()
   return [[RCTNavigator alloc] initWithBridge:self.bridge];
 }
 
+RCT_EXPORT_VIEW_PROPERTY(viewControllerKey, NSString)
 RCT_EXPORT_VIEW_PROPERTY(requestedTopOfStack, NSInteger)
 RCT_EXPORT_VIEW_PROPERTY(onNavigationProgress, RCTDirectEventBlock)
 RCT_EXPORT_VIEW_PROPERTY(onNavigationComplete, RCTBubblingEventBlock)

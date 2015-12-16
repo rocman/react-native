@@ -97,7 +97,7 @@ RCT_NOT_IMPLEMENTED(- (instancetype)initWithCoder:(NSCoder *)aDecoder)
     for (RCTTabBarItem *tab in [self reactSubviews]) {
       UIViewController *controller = tab.reactViewController;
       if (!controller) {
-        controller = [[RCTWrapperViewController alloc] initWithContentView:tab];
+        controller = [[RCTWrapperViewController alloc] initWithTabItem:tab];
       }
       [viewControllers addObject:controller];
     }

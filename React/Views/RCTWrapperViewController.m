@@ -13,6 +13,7 @@
 
 #import "RCTEventDispatcher.h"
 #import "RCTNavItem.h"
+#import "RCTTabBarItem.h"
 #import "RCTUtils.h"
 #import "RCTViewControllerProtocol.h"
 #import "UIView+React.h"
@@ -45,6 +46,15 @@
 {
   if ((self = [self initWithContentView:navItem])) {
     _navItem = navItem;
+    self.hidesBottomBarWhenPushed = _navItem.hidesBottomBarWhenPushed;
+  }
+  return self;
+}
+
+- (instancetype)initWithTabItem:(RCTTabBarItem *)tabItem
+{
+  if ((self = [self initWithContentView:tabItem])) {
+    _tabItem = tabItem;
   }
   return self;
 }
@@ -86,20 +96,6 @@ static BOOL RCTFindScrollViewAndRefreshContentInsetInView(UIView *view)
   }
 }
 
-static UIView *RCTFindNavBarShadowViewInView(UIView *view)
-{
-  if ([view isKindOfClass:[UIImageView class]] && view.bounds.size.height <= 1) {
-    return view;
-  }
-  for (UIView *subview in view.subviews) {
-    UIView *shadowView = RCTFindNavBarShadowViewInView(subview);
-    if (shadowView) {
-      return shadowView;
-    }
-  }
-  return nil;
-}
-
 - (void)viewWillAppear:(BOOL)animated
 {
   [super viewWillAppear:animated];
@@ -110,22 +106,63 @@ static UIView *RCTFindNavBarShadowViewInView(UIView *view)
     [self.navigationController
      setNavigationBarHidden:_navItem.navigationBarHidden
      animated:animated];
+    
+    _navItem.navigationBar = self.navigationController.navigationBar;
+    _navItem.navigationItem = self.navigationItem;
+  }
+  
+  // TODO: find a way to make this less-tightly coupled to tab bar controller
+  if ([self.parentViewController isKindOfClass:[UITabBarController class]])
+  {
+    if (_tabItem.onWillAppear) {
+      _tabItem.onWillAppear(nil);
+    }
+  }
+}
 
-    UINavigationBar *bar = self.navigationController.navigationBar;
-    bar.barTintColor = _navItem.barTintColor;
-    bar.tintColor = _navItem.tintColor;
-    bar.translucent = _navItem.translucent;
-    bar.titleTextAttributes = _navItem.titleTextColor ? @{
-      NSForegroundColorAttributeName: _navItem.titleTextColor
-    } : nil;
+- (void)viewDidAppear:(BOOL)animated
+{
+  [super viewDidAppear:animated];
+  
+  // TODO: find a way to make this less-tightly coupled to tab bar controller
+  if ([self.parentViewController isKindOfClass:[UITabBarController class]])
+  {
+    if (_tabItem.onDidAppear) {
+      _tabItem.onDidAppear(nil);
+    }
+  }
+}
 
-    RCTFindNavBarShadowViewInView(bar).hidden = _navItem.shadowHidden;
+- (void)viewWillDisappear:(BOOL)animated
+{
+  [super viewWillDisappear:animated];
+  
+  // TODO: find a way to make this less-tightly coupled to tab bar controller
+  if ([self.parentViewController isKindOfClass:[UITabBarController class]])
+  {
+    if (_tabItem.onWillDisappear) {
+      _tabItem.onWillDisappear(nil);
+    }
+  }
+}
 
-    UINavigationItem *item = self.navigationItem;
-    item.title = _navItem.title;
-    item.backBarButtonItem = _navItem.backButtonItem;
-    item.leftBarButtonItem = _navItem.leftButtonItem;
-    item.rightBarButtonItem = _navItem.rightButtonItem;
+- (void)viewDidDisappear:(BOOL)animated
+{
+  [super viewDidDisappear:animated];
+  
+  // TODO: find a way to make this less-tightly coupled to tab bar controller
+  if ([self.parentViewController isKindOfClass:[UITabBarController class]])
+  {
+    if (_tabItem.onDidDisappear) {
+      _tabItem.onDidDisappear(nil);
+    }
+  }
+}
+
+- (void)getReady:(void (^)())callback
+{
+  if ([_contentView isKindOfClass:[RCTNavItem class]]) {
+    [(RCTNavItem *)_contentView getReady:callback];
   }
 }
 

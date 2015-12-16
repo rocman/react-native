@@ -21,12 +21,23 @@ RCT_EXPORT_MODULE()
   return [RCTTabBarItem new];
 }
 
+RCT_EXPORT_VIEW_PROPERTY(viewControllerType,  NSString)
+RCT_EXPORT_VIEW_PROPERTY(viewControllerKey,   NSString)
+
 RCT_EXPORT_VIEW_PROPERTY(badge, id /* NSString or NSNumber */)
 RCT_EXPORT_VIEW_PROPERTY(selected, BOOL)
 RCT_EXPORT_VIEW_PROPERTY(icon, UIImage)
-RCT_REMAP_VIEW_PROPERTY(selectedIcon, barItem.selectedImage, UIImage)
 RCT_EXPORT_VIEW_PROPERTY(systemIcon, UITabBarSystemItem)
 RCT_EXPORT_VIEW_PROPERTY(onPress, RCTBubblingEventBlock)
+
+RCT_REMAP_VIEW_PROPERTY(selectedIcon, barItem.selectedImage, UIImage)
+
+RCT_EXPORT_VIEW_PROPERTY(onPress,         RCTBubblingEventBlock)
+RCT_EXPORT_VIEW_PROPERTY(onWillAppear,    RCTBubblingEventBlock)
+RCT_EXPORT_VIEW_PROPERTY(onDidAppear,     RCTBubblingEventBlock)
+RCT_EXPORT_VIEW_PROPERTY(onWillDisappear, RCTBubblingEventBlock)
+RCT_EXPORT_VIEW_PROPERTY(onDidDisappear,  RCTBubblingEventBlock)
+
 RCT_CUSTOM_VIEW_PROPERTY(title, NSString, RCTTabBarItem)
 {
   view.barItem.title = json ? [RCTConvert NSString:json] : defaultView.barItem.title;

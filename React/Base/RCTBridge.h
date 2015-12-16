@@ -174,3 +174,11 @@ RCT_EXTERN BOOL RCTBridgeModuleClassIsRegistered(Class);
 __deprecated_msg("Use moduleClasses and/or moduleForName: instead");
 
 @end
+
+@interface RCTBatchedBridge : RCTBridge <RCTInvalidating>
+
+@property (nonatomic, weak) RCTBridge *parentBridge;
+
+- (instancetype)initWithParentBridge:(RCTBridge *)bridge NS_DESIGNATED_INITIALIZER;
+
+@end
