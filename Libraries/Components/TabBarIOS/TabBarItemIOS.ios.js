@@ -144,11 +144,11 @@ var TabBarItemIOS = React.createClass({
   },
 
   render: function() {
-    var {style, children, selected, content, ...props} = this.props;
+    var {style, content, children, ...props} = this.props;
     this.viewControllerKey || (this.viewControllerKey = Math.random() + '');
     
     var tabContents, viewControllerType;
-    var tabContent = content({
+    var tabContent = content && content({
       ref: 'content', viewControllerKey: this.viewControllerKey
     });
     if (tabContent && tabContent.type.displayName == 'NavigatorIOS') {
@@ -158,8 +158,8 @@ var TabBarItemIOS = React.createClass({
     // preserve state between tab transitions
     if (this.state.hasBeenSelected) {
       tabContents = (
-        <StaticContainer shouldUpdate={selected}>
-          {tabContent}
+        <StaticContainer shouldUpdate={props.selected}>
+          {tabContent || children}
         </StaticContainer>
       );
     } else {
