@@ -674,7 +674,7 @@ var NavigatorIOS = React.createClass({
               <Component
                 navigator={this.navigator}
                 route={route}
-                {...route.passProps}
+                {...passProps}
               />
             </StaticContainer>
           </RCTNavigationItem>
