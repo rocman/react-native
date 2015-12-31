@@ -559,11 +559,11 @@ var NavigatorIOS = React.createClass({
     };
     if (index == topIndex) {
       this.setState(nextState, function() {
-          this._handleNavigatorStackChanged({
-            nativeEvent: {
-              stackLength: nextRouteStack.length
-            }
-          });
+        this._handleNavigatorStackChanged({
+          nativeEvent: {
+            stackLength: nextRouteStack.length
+          }
+        });
       });
     }
     else {
