@@ -14,6 +14,7 @@
 var EventEmitter = require('EventEmitter');
 var Image = require('Image');
 var NavigationContext = require('NavigationContext');
+var NavigationItemIOS = require('NavigationItemIOS');
 var RCTNavigatorManager = require('NativeModules').NavigatorManager;
 var React = require('React');
 var StaticContainer = require('StaticContainer.react');
@@ -652,32 +653,13 @@ var NavigatorIOS = React.createClass({
   },
 
   _routeToStackItem: function(route: Route, i: number) {
-    var {component, wrapperStyle, passProps, ...route} = route;
-    var {itemWrapperStyle, ...props} = this.props;
     var shouldUpdateChild =
       this.state.updatingAllIndicesAtOrBeyond != null &&
       this.state.updatingAllIndicesAtOrBeyond <= i;
-    var Component = component;
     return (
       <StaticContainer key={'nav' + i} shouldUpdate={shouldUpdateChild}>
         {shouldUpdateChild && (
-          <RCTNavigationItem
-            {...route}
-            {...props}
-            titleView={NavigationBarTitleView.hook(route.titleView, route)}
-            style={[
-              styles.stackItem,
-              itemWrapperStyle,
-              wrapperStyle
-            ]}>
-            <StaticContainer key={'nav_content_' + i} shouldUpdate={!route.skipUpdate}>
-              <Component
-                navigator={this.navigator}
-                route={route}
-                {...passProps}
-              />
-            </StaticContainer>
-          </RCTNavigationItem>
+          <NavigationItemIOS index={i} route={route} navigator={this.navigator} {...this.props} />
         )}
       </StaticContainer>
     );
@@ -719,72 +701,11 @@ var NavigatorIOS = React.createClass({
 });
 
 var styles = StyleSheet.create({
-  stackItem: {
-    backgroundColor: 'white',
-    overflow: 'hidden',
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-  },
   transitioner: {
     flex: 1,
   },
 });
 
 var RCTNavigator = requireNativeComponent('RCTNavigator');
-var RCTNavigationItem = requireNativeComponent('RCTNavItem');
-var RCTNavigationBarTitleViewWrapper = requireNativeComponent('RCTNavigationBarTitleViewWrapper');
 
 module.exports = NavigatorIOS;
-
-var AppRegistry = require('AppRegistry');
-var Text = require('Text');
-var components = [];
-var navigationBarTitleViews = {};
-var NavigationBarTitleView = React.createClass({
-  statics: {
-    hook: function(renderer, holder) {
-      if (renderer == null) {
-        return -1;
-      }
-      var index = components.findIndex(c => c == holder);
-      if (index < 0) {
-        index = components.length;
-        components[index] = holder;
-        holder.renderer = renderer;
-      }
-      else {
-        if (holder.renderer != renderer) {
-          delete components[index];
-          index = components.length;
-          components[index] = holder;
-          holder.renderer = renderer;
-        }
-      }
-      return index;
-    },
-    unhook: function(holder) {
-      delete components[components.findIndex(c => c == holder)];
-    },
-    take: function(index) {
-      var holder = components[index];
-      return holder && holder.renderer;
-    }
-  },
-  render: function() {
-    var index = this.state && this.state.component;
-    if (index == null) {
-      index = this.props.component;
-    }
-    navigationBarTitleViews[this.props.id] = this;
-    var Component = NavigationBarTitleView.take(index);
-    return (
-      <RCTNavigationBarTitleViewWrapper style={{height:44,alignSelf:'center'}}>
-        {Component ? Component() : <View />}
-      </RCTNavigationBarTitleViewWrapper>
-    );
-  }
-});
-AppRegistry.registerComponent('NavigationBarTitleView', () => NavigationBarTitleView);
