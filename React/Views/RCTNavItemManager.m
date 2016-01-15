@@ -41,7 +41,11 @@ RCT_EXPORT_VIEW_PROPERTY(leftButtonIcon, UIImage)
 RCT_EXPORT_VIEW_PROPERTY(rightButtonIcon, UIImage)
 RCT_EXPORT_VIEW_PROPERTY(rightButtonTitle, NSString)
 
-RCT_EXPORT_VIEW_PROPERTY(onLeftButtonPress, RCTBubblingEventBlock)
+RCT_EXPORT_VIEW_PROPERTY(onLeftButtonPress,  RCTBubblingEventBlock)
 RCT_EXPORT_VIEW_PROPERTY(onRightButtonPress, RCTBubblingEventBlock)
+RCT_EXPORT_VIEW_PROPERTY(onWillAppear,       RCTBubblingEventBlock)
+RCT_EXPORT_VIEW_PROPERTY(onDidAppear,        RCTBubblingEventBlock)
+RCT_EXPORT_VIEW_PROPERTY(onWillDisappear,    RCTBubblingEventBlock)
+RCT_EXPORT_VIEW_PROPERTY(onDidDisappear,     RCTBubblingEventBlock)
 
 @end

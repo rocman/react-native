@@ -49,5 +49,9 @@
 
 @property (nonatomic, copy)     RCTBubblingEventBlock onLeftButtonPress;
 @property (nonatomic, copy)     RCTBubblingEventBlock onRightButtonPress;
+@property (nonatomic, copy)     RCTBubblingEventBlock onWillAppear;
+@property (nonatomic, copy)     RCTBubblingEventBlock onDidAppear;
+@property (nonatomic, copy)     RCTBubblingEventBlock onWillDisappear;
+@property (nonatomic, copy)     RCTBubblingEventBlock onDidDisappear;
 
 @end

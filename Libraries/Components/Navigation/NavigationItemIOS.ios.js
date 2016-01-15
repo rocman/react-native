@@ -34,6 +34,10 @@ const styles = StyleSheet.create({
 });
 
 class NavigationItemIOS extends React.Component {
+  constructor() {
+    super(...arguments);
+    this.forwards = {};
+  }
   render() {
     var {itemWrapperStyle, navigator, route, index, ...props} = this.props;
     var {component, wrapperStyle, passProps, ...route} = route;
@@ -47,11 +51,26 @@ class NavigationItemIOS extends React.Component {
           styles.stackItem,
           itemWrapperStyle,
           wrapperStyle
-        ]}>
+        ]}
+        onWillAppear={this.forward('content', 'componentWillAppear')}
+        onDidAppear={this.forward('content', 'componentDidAppear')}
+        onWillDisappear={this.forward('content', 'componentWillDisappear')}
+        onDidDisappear={this.forward('content', 'componentDidDisappear')}>
         <StaticContainer key={'nav_content_' + index} shouldUpdate={!route.skipUpdate}>
-          <Component navigator={navigator} route={route} {...passProps} />
+          <Component ref="content" navigator={navigator} route={route} {...passProps} />
         </StaticContainer>
       </RCTNavigationItem>
+    );
+  }
+  forward(targetKey, methodName) {
+    const forwardKey = `${targetKey}:${methodName}`;
+    return this.forwards[forwardKey] || (
+      this.forwards[forwardKey] = () => {
+        var target = this.refs[targetKey];
+        if (target && target[methodName]) {
+          target[methodName]();
+        }
+      }
     );
   }
 }

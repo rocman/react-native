@@ -109,6 +109,10 @@ static BOOL RCTFindScrollViewAndRefreshContentInsetInView(UIView *view)
     
     _navItem.navigationBar = self.navigationController.navigationBar;
     _navItem.navigationItem = self.navigationItem;
+    
+    if (_navItem.onWillAppear) {
+      _navItem.onWillAppear(nil);
+    }
   }
   
   // TODO: find a way to make this less-tightly coupled to tab bar controller
@@ -124,6 +128,14 @@ static BOOL RCTFindScrollViewAndRefreshContentInsetInView(UIView *view)
 {
   [super viewDidAppear:animated];
   
+  // TODO: find a way to make this less-tightly coupled to navigation controller
+  if ([self.parentViewController isKindOfClass:[UINavigationController class]])
+  {
+    if (_navItem.onDidAppear) {
+      _navItem.onDidAppear(nil);
+    }
+  }
+  
   // TODO: find a way to make this less-tightly coupled to tab bar controller
   if ([self.parentViewController isKindOfClass:[UITabBarController class]])
   {
@@ -137,6 +149,14 @@ static BOOL RCTFindScrollViewAndRefreshContentInsetInView(UIView *view)
 {
   [super viewWillDisappear:animated];
   
+  // TODO: find a way to make this less-tightly coupled to navigation controller
+  if ([self.parentViewController isKindOfClass:[UINavigationController class]])
+  {
+    if (_navItem.onWillDisappear) {
+      _navItem.onWillDisappear(nil);
+    }
+  }
+  
   // TODO: find a way to make this less-tightly coupled to tab bar controller
   if ([self.parentViewController isKindOfClass:[UITabBarController class]])
   {
@@ -149,6 +169,14 @@ static BOOL RCTFindScrollViewAndRefreshContentInsetInView(UIView *view)
 - (void)viewDidDisappear:(BOOL)animated
 {
   [super viewDidDisappear:animated];
+  
+  // TODO: find a way to make this less-tightly coupled to navigation controller
+  if ([self.parentViewController isKindOfClass:[UINavigationController class]])
+  {
+    if (_navItem.onDidDisappear) {
+      _navItem.onDidDisappear(nil);
+    }
+  }
   
   // TODO: find a way to make this less-tightly coupled to tab bar controller
   if ([self.parentViewController isKindOfClass:[UITabBarController class]])

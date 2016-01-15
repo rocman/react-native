@@ -19,8 +19,8 @@ var View = require('View');
 
 var requireNativeComponent = require('requireNativeComponent');
 
-var TabBarItemIOS = React.createClass({
-  propTypes: {
+class TabBarItemIOS extends React.Component {
+  static propTypes = {
     ...View.propTypes,
     /**
      * Little red bubble that sits at the top right of the icon.
@@ -104,46 +104,41 @@ var TabBarItemIOS = React.createClass({
      * is defined.
      */
     title: React.PropTypes.string,
-  },
+  };
 
-  getInitialState: function() {
-    return {
+  constructor() {
+    super(...arguments);
+    this.forwards = {};
+    this.state = {
       hasBeenSelected: false,
     };
-  },
+  }
 
-  componentWillMount: function() {
+  componentWillMount() {
     if (this.props.selected) {
       this.setState({hasBeenSelected: true});
     }
-    this.forwardWillAppearToContent = (
-      this.forwardToContent.bind(this, 'componentWillAppear')
-    );
-    this.forwardDidAppearToContent = (
-      this.forwardToContent.bind(this, 'componentDidAppear')
-    );
-    this.forwardWillDisapearToContent = (
-      this.forwardToContent.bind(this, 'componentWillDisappear')
-    );
-    this.forwardDidDisappearToContent = (
-      this.forwardToContent.bind(this, 'componentDidDisappear')
-    );
-  },
+  }
 
-  componentWillReceiveProps: function(nextProps: { selected?: boolean }) {
+  componentWillReceiveProps(nextProps: { selected?: boolean }) {
     if (this.state.hasBeenSelected || nextProps.selected) {
       this.setState({hasBeenSelected: true});
     }
-  },
+  }
   
-  forwardToContent: function(methodName) {
-    var content = this.refs.content;
-    if (content && content[methodName]) {
-      content[methodName]();
-    }
-  },
+  forward(targetKey, methodName) {
+    const forwardKey = `${targetKey}:${methodName}`;
+    return this.forwards[forwardKey] || (
+      this.forwards[forwardKey] = () => {
+        var target = this.refs[targetKey];
+        if (target && target[methodName]) {
+          target[methodName]();
+        }
+      }
+    );
+  }
 
-  render: function() {
+  render() {
     var {style, content, children, ...props} = this.props;
     this.viewControllerKey || (this.viewControllerKey = Math.random() + '');
     
@@ -171,15 +166,15 @@ var TabBarItemIOS = React.createClass({
         style={[styles.tab, style]}
         viewControllerKey={this.viewControllerKey}
         viewControllerType={viewControllerType}
-        onWillAppear={this.forwardWillAppearToContent}
-        onDidAppear={this.forwardDidAppearToContent}
-        onWillDisappear={this.forwardWillDisappearToContent}
-        onDidDisappear={this.forwardDidDisappearToContent}>
+        onWillAppear={this.forward('content', 'componentWillAppear')}
+        onDidAppear={this.forward('content', 'componentDidAppear')}
+        onWillDisappear={this.forward('content', 'componentWillDisappear')}
+        onDidDisappear={this.forward('content', 'componentDidDisappear')}>
         {tabContents}
       </RCTTabBarItem>
     );
   }
-});
+}
 
 var styles = StyleSheet.create({
   tab: {
