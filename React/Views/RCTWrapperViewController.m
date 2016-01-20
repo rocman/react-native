@@ -101,8 +101,7 @@ static BOOL RCTFindScrollViewAndRefreshContentInsetInView(UIView *view)
   [super viewWillAppear:animated];
 
   // TODO: find a way to make this less-tightly coupled to navigation controller
-  if ([self.parentViewController isKindOfClass:[UINavigationController class]])
-  {
+  if ([self.parentViewController isKindOfClass:[UINavigationController class]]) {
     [self.navigationController
      setNavigationBarHidden:_navItem.navigationBarHidden
      animated:animated];
@@ -116,8 +115,7 @@ static BOOL RCTFindScrollViewAndRefreshContentInsetInView(UIView *view)
   }
   
   // TODO: find a way to make this less-tightly coupled to tab bar controller
-  if ([self.parentViewController isKindOfClass:[UITabBarController class]])
-  {
+  if ([self.parentViewController isKindOfClass:[UITabBarController class]]) {
     if (_tabItem.onWillAppear) {
       _tabItem.onWillAppear(nil);
     }
@@ -129,16 +127,14 @@ static BOOL RCTFindScrollViewAndRefreshContentInsetInView(UIView *view)
   [super viewDidAppear:animated];
   
   // TODO: find a way to make this less-tightly coupled to navigation controller
-  if ([self.parentViewController isKindOfClass:[UINavigationController class]])
-  {
+  if ([self.parentViewController isKindOfClass:[UINavigationController class]]) {
     if (_navItem.onDidAppear) {
       _navItem.onDidAppear(nil);
     }
   }
   
   // TODO: find a way to make this less-tightly coupled to tab bar controller
-  if ([self.parentViewController isKindOfClass:[UITabBarController class]])
-  {
+  if ([self.parentViewController isKindOfClass:[UITabBarController class]]) {
     if (_tabItem.onDidAppear) {
       _tabItem.onDidAppear(nil);
     }
